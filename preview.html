@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro UI Test</title>
+    <link rel="stylesheet" href="stylesheet.css">
+    <style>
+        body {
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            /* Mocking the GNOME Shell popup environment variables */
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
+            color: #fff;
+        }
+
+        /* Mock specific Clutter/St properties that browsers don't understand */
+        * {
+            box-sizing: border-box;
+        }
+
+        .popup-menu-content {
+            width: 380px;
+            height: auto;
+            border-radius: 40px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 0 100px rgba(163, 213, 255, 0.1);
+        }
+
+        /* Flexbox shims for the nested layout since StBoxLayout defaults to vertical/horizontal based on context */
+        .pomodoro-menu-header { display: flex; align-items: center; }
+        .pomodoro-timer-area { display: flex; flex-direction: column; align-items: center; }
+        .pomodoro-timer-circle { display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .pomodoro-ring-dot { position: absolute; top: 20px; right: 45px; }
+        
+        .pomodoro-stats-card { display: flex; justify-content: space-between; align-items: center; }
+        .stats-col { display: flex; align-items: center; }
+        
+        .pomodoro-tasks-header { display: flex; justify-content: space-between; align-items: center; }
+        .pomodoro-task-box { display: flex; flex-direction: column; }
+        .pomodoro-task-row { display: flex; align-items: center; }
+        
+        .pomodoro-start-session-btn { display: flex; align-items: center; }
+        .chevron-spacer { flex-grow: 1; text-align: right; }
+
+        .pomodoro-bottom-bar { display: flex; justify-content: space-between; align-items: center; }
+        .pomodoro-settings-btn { display: flex; align-items: center; }
+        .pomodoro-power-button { display: flex; align-items: center; justify-content: center; }
+
+        /* Mock icons */
+        .pomodoro-indicator-icon::after { content: "★"; }
+        .pomodoro-timer-icon::after { content: "💧"; font-size: 20px;}
+        .pomodoro-timer-play-icon::after { content: "▶"; font-size: 20px;}
+        .pomodoro-stats-icon::after { content: "📊"; font-size: 20px;}
+        .pomodoro-tasks-header-icon::after { content: "≡"; }
+        .pomodoro-start-session-icon::after { content: "▶"; font-size: 16px;}
+        .pomodoro-settings-icon::after { content: "⚙"; font-size: 18px;}
+        .pomodoro-power-icon::after { content: "⏻"; font-size: 18px;}
+    </style>
+</head>
+<body>
+
+    <div class="popup-menu-content">
+        <!-- Header -->
+        <div class="pomodoro-menu-header">
+            <span class="pomodoro-menu-header-star">✦</span>
+            Pomodoro Focus
+        </div>
+        
+        <!-- Timer Centerpiece -->
+        <div class="pomodoro-timer-area">
+            <div class="pomodoro-timer-circle">
+                <div class="pomodoro-ring-dot"></div>
+                <div class="pomodoro-timer-icon"></div>
+                <div class="pomodoro-timer-state-label">FOCUS</div>
+                <div class="pomodoro-timer-digits">25:00</div>
+                <div class="pomodoro-timer-play-btn">
+                    <div class="pomodoro-timer-play-icon"></div>
+                </div>
+            </div>
+            <div class="pomodoro-motivation-text">Take a breather, then get back to it.</div>
+        </div>
+
+        <!-- Stats Card -->
+        <div class="pomodoro-stats-card">
+            <div class="stats-col">
+                <div class="pomodoro-stats-icon"></div>
+                <div>
+                    <div class="pomodoro-stats-label-primary">Today</div>
+                    <div class="pomodoro-stats-value">1 pomodoro</div>
+                </div>
+            </div>
+            <div class="stats-col">
+                <div class="pomodoro-stats-icon" style="opacity: 0.7;"></div>
+                <div>
+                    <div class="pomodoro-stats-value" style="font-size: 15px;">25m</div>
+                    <div class="pomodoro-stats-label-primary">focused</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks -->
+        <div class="pomodoro-tasks-header">
+            <div>
+                <span class="pomodoro-tasks-header-icon"></span> TOP 3 TASKS
+            </div>
+            <button class="pomodoro-tasks-edit-btn">Edit ✎</button>
+        </div>
+
+        <div class="pomodoro-task-box">
+            <div class="pomodoro-task-row">
+                <div class="pomodoro-task-circle"></div>
+                <div class="pomodoro-task-text">Statsweek2</div>
+            </div>
+            <div class="pomodoro-task-row">
+                <div class="pomodoro-task-circle"></div>
+                <div class="pomodoro-task-text">mathsweek1 to 5 graded assignments</div>
+            </div>
+            <div class="pomodoro-task-row">
+                <div class="pomodoro-task-circle"></div>
+                <div class="pomodoro-task-text">Review chapter 3 notes</div>
+            </div>
+        </div>
+
+        <!-- Start Button -->
+        <div class="pomodoro-start-session-btn">
+            <div class="pomodoro-start-session-icon"></div>
+            <div class="pomodoro-start-session-label">Start Focus Session</div>
+            <div class="chevron-spacer">
+                <div class="pomodoro-start-session-chevron">➔</div>
+            </div>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="pomodoro-bottom-bar">
+            <button class="pomodoro-settings-btn">
+                <span class="pomodoro-settings-icon"></span> Settings
+            </button>
+            <button class="pomodoro-power-button pomodoro-power-off">
+                <span class="pomodoro-power-icon"></span>
+            </button>
+        </div>
+    </div>
+
+</body>
+</html>

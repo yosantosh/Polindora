@@ -1,0 +1,712 @@
+/* ============================================
+   POMODORO FOCUS TIMER — Dark Glassmorphism Theme (Extreme)
+   Matches the uploaded visual: Glossy top-lights, pill shapes, 
+   fluid wave emulation, and deep shadows.
+   ============================================ */
+
+* {
+    font-family: "Inter", "Roboto", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* ── Progress Bar Containers (Panel Indicator) ── */
+.pomodoro-bar-container {
+    margin: 0 8px;
+    padding: 0;
+}
+
+.pomodoro-bar-hidden {
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: 300ms;
+    transition-timing-function: ease-out;
+}
+
+.pomodoro-bar-visible {
+    opacity: 255;
+    transition-property: opacity;
+    transition-duration: 300ms;
+    transition-timing-function: ease-out;
+}
+
+.pomodoro-bar-outer {
+    border-radius: 99px;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.pomodoro-bar-track {
+    border-radius: 99px;
+    background: rgba(0, 0, 0, 0.8);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9);
+    border: none;
+}
+
+.pomodoro-bar-fill {
+    border-radius: 99px;
+    min-height: 3px;
+    transition-property: background, box-shadow, opacity;
+    transition-duration: 1000ms;
+    transition-timing-function: linear;
+}
+
+/* Bright white glow for the fill to match the image */
+.pomodoro-work-fill {
+    background: #ffffff;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.8), 0 0 12px rgba(255, 255, 255, 0.4), 0 0 24px rgba(255, 255, 255, 0.2);
+}
+
+.pomodoro-break-fill {
+    background: #eaf2ff;
+    box-shadow: 0 0 5px rgba(234, 242, 255, 0.8), 0 0 10px rgba(234, 242, 255, 0.4), 0 0 20px rgba(234, 242, 255, 0.2);
+}
+
+.pomodoro-work-fill-urgent {
+    background: #ffffff;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 1.0), 0 0 16px rgba(163, 213, 255, 0.6), 0 0 32px rgba(163, 213, 255, 0.4);
+}
+
+.pomodoro-complete-fill {
+    background: #ffffff;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 1.0), 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.4);
+}
+
+.pomodoro-bar-shine {
+    border-radius: 99px 99px 0 0;
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.15) 0%,
+        transparent 50%
+    );
+    min-height: 1px;
+}
+
+.pomodoro-indicator {
+    padding: 0 4px;
+}
+
+.pomodoro-indicator-icon {
+    icon-size: 16px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.pomodoro-indicator-icon-active {
+    icon-size: 16px;
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.pomodoro-indicator-icon-break {
+    icon-size: 16px;
+    color: #eaf2ff;
+}
+
+.pomodoro-indicator-icon-disabled {
+    icon-size: 16px;
+    color: rgba(255, 255, 255, 0.15);
+}
+
+/* ══════════════════════════════════════════
+   POPUP MENU — Extreme Dark Glassmorphism
+   ══════════════════════════════════════════ */
+
+/* The root popup menu styling — simulating the fluid wave blobs */
+.popup-menu-content {
+    background-color: #02060a;
+    background-image: 
+        radial-gradient(ellipse at 10% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 40%),
+        radial-gradient(ellipse at 90% 70%, rgba(163, 213, 255, 0.04) 0%, transparent 50%),
+        radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
+}
+
+/* ── Menu Header ── */
+.pomodoro-menu-header {
+    font-size: 15px;
+    font-weight: 300;
+    color: #ffffff;
+    padding: 16px 24px 8px;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+}
+
+.pomodoro-menu-header-star {
+    color: #ffffff;
+    font-size: 16px;
+    margin-right: 8px;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+/* ── Timer Display Area — The centerpiece ── */
+.pomodoro-timer-area {
+    padding: 32px 24px 24px;
+    margin: 8px 16px 16px;
+    border-radius: 40px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+    backdrop-filter: blur(30px);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: 1px solid rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.6);
+    box-shadow: inset 0 2px 20px rgba(255, 255, 255, 0.02),
+                0 20px 60px rgba(0, 0, 0, 0.8);
+}
+
+/* Circular timer ring container — Dark Hole Effect */
+.pomodoro-timer-circle {
+    width: 240px;
+    height: 240px;
+    border-radius: 120px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    background: radial-gradient(circle at center, #010204 0%, #03080e 100%);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.8),
+                inset 0 6px 20px rgba(0, 0, 0, 0.9),
+                inset 0 -1px 4px rgba(255, 255, 255, 0.04);
+}
+
+/* Timer state label (FOCUS / BREAK) */
+.pomodoro-timer-state-label {
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 4px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 8px;
+}
+
+/* Minimal icon above text */
+.pomodoro-timer-icon {
+    icon-size: 20px;
+    color: #ffffff;
+    opacity: 0.9;
+    margin-bottom: 4px;
+}
+
+/* The large timer digits */
+.pomodoro-timer-digits {
+    font-size: 64px;
+    font-weight: 200;
+    letter-spacing: 2px;
+    color: #ffffff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.2), 0 0 20px rgba(255, 255, 255, 0.1);
+    font-feature-settings: "tnum";
+}
+
+/* Play/Pause button inside the circle */
+.pomodoro-timer-play-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 1px 4px rgba(255, 255, 255, 0.1),
+                0 6px 16px rgba(0, 0, 0, 0.6),
+                inset 0 -2px 6px rgba(0, 0, 0, 0.4);
+    margin-top: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition-property: background, box-shadow, transform;
+    transition-duration: 250ms;
+    transition-timing-function: ease-out;
+}
+
+.pomodoro-timer-play-btn:hover {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%);
+    box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.2),
+                0 8px 20px rgba(0, 0, 0, 0.7),
+                inset 0 -2px 6px rgba(0, 0, 0, 0.5);
+    transform: scale(1.03);
+}
+
+.pomodoro-timer-play-btn:active {
+    box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.6);
+    transform: scale(0.97);
+}
+
+.pomodoro-timer-play-icon {
+    icon-size: 20px;
+    color: #ffffff;
+}
+
+/* Timer progress dot (glowing bead effect) */
+.pomodoro-ring-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    background: radial-gradient(circle, #ffffff 0%, #e0f0ff 100%);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2),
+                0 0 8px rgba(255, 255, 255, 1.0),
+                0 0 20px rgba(163, 213, 255, 0.8),
+                0 0 30px rgba(163, 213, 255, 0.4);
+}
+
+/* ── Motivation Text ── */
+.pomodoro-motivation-text {
+    font-size: 13px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+    padding: 8px 16px;
+    margin-top: 8px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+/* ── Stats Card — Very glossy pill ── */
+.pomodoro-stats-card {
+    padding: 18px 24px;
+    margin: 8px 16px 16px;
+    border-radius: 24px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%);
+    backdrop-filter: blur(24px);
+    border-top: 1.5px solid rgba(255, 255, 255, 0.2);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: 1px solid rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.6);
+    box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.08),
+                0 12px 30px rgba(0, 0, 0, 0.6);
+}
+
+.pomodoro-stats-icon {
+    icon-size: 20px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-right: 12px;
+}
+
+.pomodoro-stats-label-primary {
+    font-size: 12px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.3px;
+}
+
+.pomodoro-stats-value {
+    font-size: 15px;
+    font-weight: 400;
+    color: #ffffff;
+}
+
+.pomodoro-stats-dot {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.15);
+    margin: 0 16px;
+}
+
+.pomodoro-stats-focused-value {
+    font-size: 16px;
+    font-weight: 400;
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+}
+
+.pomodoro-stats-focused-label {
+    font-size: 12px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* ── Tasks Section ── */
+.pomodoro-tasks-header {
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 12px 24px 8px;
+}
+
+.pomodoro-tasks-header-icon {
+    icon-size: 14px;
+    color: rgba(255, 255, 255, 0.3);
+    margin-right: 8px;
+}
+
+.pomodoro-tasks-edit-btn {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.4);
+    padding: 4px 8px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    transition-property: background, color;
+    transition-duration: 200ms;
+}
+
+.pomodoro-tasks-edit-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+}
+
+/* Task List Wrapper (Glass Box) */
+.pomodoro-task-box {
+    margin: 0 16px 16px;
+    padding: 8px 0;
+    border-radius: 24px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 100%);
+    backdrop-filter: blur(24px);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.6);
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.05),
+                0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Task Item Row (Transparent, line separated) */
+.pomodoro-task-row {
+    padding: 14px 20px;
+    margin: 0;
+    border-radius: 0;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    transition-property: background, transform;
+    transition-duration: 300ms;
+    transition-timing-function: ease-out;
+}
+
+.pomodoro-task-row:last-child {
+    border-bottom: none;
+}
+
+.pomodoro-task-row:hover {
+    background: rgba(255, 255, 255, 0.03);
+    transform: translateX(4px);
+}
+
+/* Circular checkbox (thin outline) */
+.pomodoro-task-circle {
+    width: 22px;
+    height: 22px;
+    border-radius: 11px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+    margin-right: 16px;
+    transition-property: border, box-shadow, background;
+    transition-duration: 200ms;
+}
+
+.pomodoro-task-circle:hover {
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 8px rgba(255, 255, 255, 0.1);
+}
+
+.pomodoro-task-circle-done {
+    width: 22px;
+    height: 22px;
+    border-radius: 11px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.2);
+    margin-right: 16px;
+}
+
+.pomodoro-task-text {
+    font-size: 14px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.pomodoro-task-text-done {
+    font-size: 14px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.3);
+    text-decoration-line: line-through;
+}
+
+.pomodoro-task-more-btn {
+    color: rgba(255, 255, 255, 0.3);
+    padding: 6px;
+    border-radius: 12px;
+    background: transparent;
+    transition-duration: 200ms;
+}
+
+.pomodoro-task-more-btn:hover {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.pomodoro-task-empty {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 13px;
+    font-weight: 300;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+/* ── Start Focus Session Button (Elongated Glass Pill) ── */
+.pomodoro-start-session-btn {
+    padding: 16px 24px;
+    margin: 16px 16px 24px;
+    border-radius: 32px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border-top: 1.5px solid rgba(255, 255, 255, 0.25);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.6);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: 1px solid rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.1),
+                0 12px 36px rgba(0, 0, 0, 0.6);
+    transition-property: background, box-shadow, transform;
+    transition-duration: 300ms;
+    transition-timing-function: ease-out;
+}
+
+.pomodoro-start-session-btn:hover {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 100%);
+    border-top: 1.5px solid rgba(255, 255, 255, 0.35);
+    box-shadow: inset 0 2px 8px rgba(255, 255, 255, 0.15),
+                0 16px 40px rgba(0, 0, 0, 0.7);
+    transform: scale(1.02);
+}
+
+.pomodoro-start-session-btn:active {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 100%);
+    box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.6);
+    transform: scale(0.98);
+}
+
+.pomodoro-start-session-icon {
+    icon-size: 20px;
+    color: #ffffff;
+    margin-right: 16px;
+    /* Simulate the circle icon background */
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 6px;
+}
+
+.pomodoro-start-session-label {
+    font-size: 15px;
+    font-weight: 400;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+}
+
+.pomodoro-start-session-chevron {
+    icon-size: 18px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── Bottom Bar (Settings + Power) ── */
+.pomodoro-bottom-bar {
+    padding: 12px 24px 20px;
+}
+
+.pomodoro-settings-btn {
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    transition-property: background, color;
+    transition-duration: 200ms;
+}
+
+.pomodoro-settings-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.pomodoro-settings-icon {
+    icon-size: 18px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-right: 8px;
+}
+
+.pomodoro-settings-label {
+    font-size: 13px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── Power Button (Circular Outline) ── */
+.pomodoro-power-button {
+    border-radius: 24px;
+    padding: 10px;
+    min-width: 44px;
+    min-height: 44px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: transparent;
+    transition-property: background, box-shadow, border;
+    transition-duration: 250ms;
+    transition-timing-function: ease-out;
+}
+
+.pomodoro-power-icon {
+    icon-size: 20px;
+}
+
+/* Power ON state */
+.pomodoro-power-on {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 16px rgba(255, 255, 255, 0.1);
+}
+
+.pomodoro-power-on:hover {
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 24px rgba(255, 255, 255, 0.2);
+}
+
+.pomodoro-power-on .pomodoro-power-icon {
+    color: #ffffff;
+}
+
+/* Power OFF state */
+.pomodoro-power-off {
+    background: transparent;
+}
+
+.pomodoro-power-off:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.pomodoro-power-off .pomodoro-power-icon {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* ── Action items in menu (Pause, Skip, Reset) ── */
+.pomodoro-action-item {
+    padding: 12px 20px;
+    margin: 4px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.7);
+    transition-property: background, color, transform;
+    transition-duration: 300ms;
+    transition-timing-function: ease-out;
+}
+
+.pomodoro-action-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    transform: translateX(4px);
+}
+
+/* ── Separators ── */
+.pomodoro-menu-separator {
+    background-color: rgba(255, 255, 255, 0.05);
+    height: 1px;
+    margin: 12px 24px;
+}
+
+/* ── Legacy elements ── */
+.pomodoro-status-box {
+    padding: 24px;
+    margin: 8px 16px;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.pomodoro-stats-box {
+    padding: 12px 16px;
+    margin: 4px 16px 8px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pomodoro-menu-status {
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    color: #ffffff;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+}
+
+.pomodoro-menu-motivation {
+    font-size: 12px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
+    margin-top: 10px;
+}
+
+.pomodoro-menu-stats {
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.pomodoro-task-entry {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 12px;
+    color: #ffffff;
+    caret-color: #ffffff;
+    selection-background-color: rgba(255, 255, 255, 0.2);
+    selected-color: #ffffff;
+    padding: 12px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.pomodoro-task-entry:focus {
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.pomodoro-task-add-btn {
+    padding: 10px;
+    margin-left: 8px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.pomodoro-task-add-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+
+.pomodoro-task-item {
+    padding: 12px 8px;
+    spacing: 12px;
+}
+
+.pomodoro-task-checkbox {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 20px;
+    font-weight: 300;
+}
+
+.pomodoro-task-checkbox:hover {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.pomodoro-task-checkbox-done {
+    color: #ffffff;
+}
+
+.pomodoro-task-label {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    font-weight: 300;
+}
+
+.pomodoro-task-label-done {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 14px;
+    font-weight: 300;
+    text-decoration-line: line-through;
+}
+
+.pomodoro-task-delete {
+    padding: 8px;
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.pomodoro-task-delete:hover {
+    color: #ff4d4d;
+    background: rgba(255, 77, 77, 0.1);
+}

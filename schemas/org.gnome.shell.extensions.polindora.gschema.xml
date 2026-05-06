@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.pomodoro-timer"
+          path="/org/gnome/shell/extensions/pomodoro-timer/">
+
+    <!-- Timer Durations -->
+    <key name="work-duration" type="i">
+      <default>25</default>
+      <summary>Work duration in minutes</summary>
+      <description>Duration of each work session in minutes (1-60)</description>
+    </key>
+
+    <key name="short-break-duration" type="i">
+      <default>5</default>
+      <summary>Short break duration in minutes</summary>
+      <description>Duration of short breaks in minutes (1-30)</description>
+    </key>
+
+    <key name="long-break-duration" type="i">
+      <default>15</default>
+      <summary>Long break duration in minutes</summary>
+      <description>Duration of long breaks in minutes (1-60)</description>
+    </key>
+
+    <key name="long-break-interval" type="i">
+      <default>4</default>
+      <summary>Pomodoros before long break</summary>
+      <description>Number of work sessions before a long break (2-8)</description>
+    </key>
+
+    <!-- Behavior -->
+    <key name="auto-start-breaks" type="b">
+      <default>true</default>
+      <summary>Auto-start breaks</summary>
+      <description>Automatically start break timer after work session ends</description>
+    </key>
+
+    <key name="auto-start-work" type="b">
+      <default>true</default>
+      <summary>Auto-start work sessions</summary>
+      <description>Automatically start work timer after break ends</description>
+    </key>
+
+    <key name="strict-mode" type="b">
+      <default>true</default>
+      <summary>Strict focus mode</summary>
+      <description>When enabled, hides pause and skip buttons during work sessions to force focus</description>
+    </key>
+
+    <key name="show-notifications" type="b">
+      <default>true</default>
+      <summary>Show notifications</summary>
+      <description>Show desktop notifications when timers complete</description>
+    </key>
+
+    <key name="play-sound-notifications" type="b">
+      <default>true</default>
+      <summary>Play sound notifications</summary>
+      <description>Play a notification sound when a timer finishes</description>
+    </key>
+
+    <!-- Appearance -->
+    <key name="work-bar-color" type="s">
+      <default>'#00d4ff'</default>
+      <summary>Work progress bar color</summary>
+      <description>Color of the work progress bar (hex)</description>
+    </key>
+
+    <key name="break-bar-color" type="s">
+      <default>'#00ff66'</default>
+      <summary>Break progress bar color</summary>
+      <description>Color of the break progress bar (hex)</description>
+    </key>
+
+    <key name="idle-bar-color" type="s">
+      <default>'#e6b800'</default>
+      <summary>Idle pulsing bar color</summary>
+      <description>Color of the pulsing bars when idle (hex)</description>
+    </key>
+
+    <key name="bar-height" type="i">
+      <default>3</default>
+      <summary>Progress bar height in pixels</summary>
+      <description>Height of the progress bars (2-8)</description>
+    </key>
+
+    <key name="bar-width" type="i">
+      <default>140</default>
+      <summary>Progress bar width in pixels</summary>
+      <description>Width of the progress bars (60-300)</description>
+    </key>
+    
+    <key name="bar-radius" type="i">
+      <default>99</default>
+      <summary>Progress bar border radius in pixels</summary>
+      <description>Radius for corners (0-99)</description>
+    </key>
+    
+    <key name="color-saturation" type="d">
+      <default>1.0</default>
+      <summary>Color Saturation multiplier</summary>
+      <description>Adjust the color saturation (0.0 to 2.0)</description>
+    </key>
+
+    <key name="glow-intensity" type="i">
+      <default>3</default>
+      <summary>Glow Intensity</summary>
+      <description>Glow effect spread in pixels</description>
+    </key>
+
+    <key name="heart-color" type="s">
+      <default>'#999999'</default>
+      <summary>Heart icon outline color</summary>
+      <description>Color of the heart outline when not filled by progress (hex)</description>
+    </key>
+
+    <key name="heart-outline-color" type="s">
+      <default>'#ff0000'</default>
+      <summary>Heart outline color</summary>
+      <description>Color of the progress outline around the heart (hex)</description>
+    </key>
+
+    <!-- State (persisted across restarts) -->
+    <key name="sessions-completed" type="i">
+      <default>0</default>
+      <summary>Sessions completed today</summary>
+      <description>Number of pomodoro sessions completed today</description>
+    </key>
+
+    <key name="total-focus-minutes" type="i">
+      <default>0</default>
+      <summary>Total focus minutes today</summary>
+      <description>Total minutes of focused work today</description>
+    </key>
+
+    <key name="all-time-focus-minutes" type="i">
+      <default>0</default>
+      <summary>All time focus minutes</summary>
+      <description>Total minutes of focused work all time</description>
+    </key>
+
+    <key name="last-session-date" type="s">
+      <default>''</default>
+      <summary>Last session date</summary>
+      <description>Date string of last session for daily reset</description>
+    </key>
+
+    <key name="tasks" type="s">
+      <default>'[]'</default>
+      <summary>To-Do Tasks</summary>
+      <description>JSON array of tasks: [{text, category, done, id, completedAt, pomodorosSpent}]</description>
+    </key>
+    
+    <key name="task-stats" type="s">
+      <default>'{}'</default>
+      <summary>Task Statistics</summary>
+      <description>JSON object: time spent per category today (minutes)</description>
+    </key>
+
+    <!-- Analytics History: JSON array of daily entries -->
+    <!-- Format: [{date, sessions, focusMinutes, categories:{cat:mins}, tasksCompleted}] -->
+    <key name="analytics-history" type="s">
+      <default>'[]'</default>
+      <summary>Analytics History</summary>
+      <description>JSON array of daily analytics entries for the past 30 days</description>
+    </key>
+
+    <key name="best-streak" type="i">
+      <default>0</default>
+      <summary>Best daily streak</summary>
+      <description>Longest consecutive days with at least 1 pomodoro</description>
+    </key>
+
+    <!-- Timer IPC: prefs writes commands, extension reads them -->
+    <key name="timer-command" type="s">
+      <default>''</default>
+      <summary>Timer command from prefs</summary>
+      <description>Command string from preferences to extension: start-work, start-short-break, start-long-break, pause, resume, skip, reset, idle</description>
+    </key>
+
+    <key name="timer-category" type="s">
+      <default>'General'</default>
+      <summary>Timer category from prefs</summary>
+      <description>Focus category selected in prefs for the current session</description>
+    </key>
+    <!-- State exported by extension for prefs UI sync -->
+    <key name="timer-state" type="s">
+      <default>'idle'</default>
+      <summary>Current timer state</summary>
+      <description>idle, work, short_break, long_break</description>
+    </key>
+    
+    <key name="timer-start-time" type="d">
+      <default>0.0</default>
+      <summary>Timer start time</summary>
+      <description>GLib.get_monotonic_time() when timer started/resumed</description>
+    </key>
+
+    <key name="timer-elapsed-accumulated" type="d">
+      <default>0.0</default>
+      <summary>Accumulated elapsed time</summary>
+      <description>Seconds elapsed before the current running segment</description>
+    </key>
+
+    <key name="timer-duration-secs" type="i">
+      <default>0</default>
+      <summary>Timer duration in seconds</summary>
+      <description>Total duration for current timer</description>
+    </key>
+
+    <key name="timer-is-paused" type="b">
+      <default>false</default>
+      <summary>Is timer paused</summary>
+      <description>True if currently paused</description>
+    </key>
+
+  </schema>
+</schemalist>

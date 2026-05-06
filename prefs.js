@@ -1,0 +1,1829 @@
+/* ============================================
+   POMODORO FOCUS TIMER — Preferences
+   GTK4 + Adwaita settings window
+   ============================================ */
+
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import Adw from 'gi://Adw';
+import Gtk from 'gi://Gtk';
+import Gdk from 'gi://Gdk?version=4.0';
+
+import { ExtensionPreferences, gettext as _ } from
+    'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+
+export default class PomodoroPreferences extends ExtensionPreferences {
+
+    fillPreferencesWindow(window) {
+        const settings = this.getSettings();
+        const display = Gdk.Display.get_default();
+        const iconTheme = Gtk.IconTheme.get_for_display(display);
+        iconTheme.add_search_path(this.dir.get_child('icons').get_path());
+        window._settings = settings;
+
+        // Ensure stats rollover if the user opens preferences on a new day
+        const now = new Date();
+        const today = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+        const lastDate = settings.get_string('last-session-date');
+        if (lastDate !== today) {
+            settings.set_int('sessions-completed', 0);
+            settings.set_int('total-focus-minutes', 0);
+            settings.set_string('task-stats', '{}');
+            settings.set_string('last-session-date', today);
+        }
+
+        window.set_default_size(480, 720);
+        window.set_title(_("Polindora"));
+        window.add_css_class('pomodoro-prefs-window');
+        
+        try {
+            let gtkSettings = Gtk.Settings.get_default();
+            if (gtkSettings) {
+                gtkSettings.set_property('gtk-decoration-layout', 'icon:minimize,close');
+            }
+        } catch (e) {
+            console.error('Failed to add minimize button:', e);
+        }
+
+        // Add custom glassmorphism styling
+        const provider = new Gtk.CssProvider();
+        const css = `
+            window.pomodoro-prefs-window {
+                background: radial-gradient(circle at center, #050b12 0%, #02060a 100%);
+            }
+            window.pomodoro-prefs-window .boxed-list {
+                background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
+                border: 1px solid rgba(255,255,255,0.06);
+                border-top: 1px solid rgba(255,255,255,0.12);
+                border-radius: 16px;
+                box-shadow: inset 0 1px 1px rgba(255,255,255,0.05), 0 4px 12px rgba(0,0,0,0.4);
+            }
+            window.pomodoro-prefs-window row {
+                background: transparent;
+                border-bottom: 1px solid rgba(255,255,255,0.02);
+            }
+            window.pomodoro-prefs-window row:last-child {
+                border-bottom: none;
+            }
+            .pomodoro-home-timer-circle {
+                background: radial-gradient(circle at center, #010204 0%, #03080e 100%);
+                border: 1px solid rgba(255,255,255,0.04);
+                border-top: 1px solid rgba(255,255,255,0.12);
+                border-radius: 120px;
+                padding: 24px;
+                min-width: 200px;
+                min-height: 200px;
+                box-shadow: 0 0 40px rgba(0,0,0,0.8), inset 0 6px 20px rgba(0,0,0,0.9);
+            }
+            .pomodoro-home-state-label {
+                font-size: 11px;
+                font-weight: 300;
+                letter-spacing: 4px;
+                color: rgba(255,255,255,0.7);
+            }
+            .pomodoro-home-digits {
+                font-size: 52px;
+                font-weight: 200;
+                letter-spacing: 2px;
+                color: #ffffff;
+                font-family: monospace;
+                text-shadow: 0 0 10px rgba(255,255,255,0.2);
+            }
+            .pomodoro-home-motivation {
+                font-size: 12px;
+                font-weight: 300;
+                font-style: italic;
+                color: rgba(255,255,255,0.6);
+            }
+            .pomodoro-home-play-btn {
+                min-width: 44px;
+                min-height: 44px;
+                border-radius: 22px;
+                background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.01));
+                border-top: 1px solid rgba(255,255,255,0.2);
+                border-bottom: 1px solid rgba(0,0,0,0.5);
+            }
+            .pomodoro-home-play-btn:hover {
+                background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+            }
+            .pomodoro-home-ctrl-btn {
+                min-width: 36px;
+                min-height: 36px;
+                border-radius: 18px;
+                background: rgba(255,255,255,0.04);
+                border: 1px solid rgba(255,255,255,0.08);
+            }
+            .pomodoro-home-ctrl-btn:hover {
+                background: rgba(255,255,255,0.08);
+            }
+            .pomodoro-home-stats-card {
+                background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
+                border-top: 1px solid rgba(255,255,255,0.15);
+                border-radius: 14px;
+                padding: 12px;
+            }
+            .pomodoro-home-task-row {
+                background: transparent;
+                border: none;
+                border-bottom: 1px solid rgba(255,255,255,0.04);
+                border-radius: 0;
+                padding: 8px 12px;
+                margin-bottom: 4px;
+            }
+            .pomodoro-home-start-btn {
+                padding: 12px 24px;
+                border-radius: 24px;
+                background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+                border-top: 1px solid rgba(255,255,255,0.25);
+                border-bottom: 1px solid rgba(0,0,0,0.5);
+                color: white;
+                font-weight: 400;
+                font-size: 15px;
+            }
+            .pomodoro-home-start-btn:hover {
+                background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04));
+            }
+            /* Analytics page */
+            .pomodoro-analytics-hero {
+                background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.01));
+                border-top: 1px solid rgba(255,255,255,0.15);
+                border-radius: 16px;
+                padding: 16px;
+            }
+            .pomodoro-analytics-hero-value {
+                font-size: 32px;
+                font-weight: 200;
+                color: #ffffff;
+                font-family: monospace;
+                text-shadow: 0 0 10px rgba(255,255,255,0.2);
+            }
+            .pomodoro-analytics-hero-label {
+                font-size: 11px;
+                font-weight: 300;
+                letter-spacing: 1px;
+                color: rgba(255,255,255,0.6);
+            }
+            .pomodoro-analytics-stat-card {
+                background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+                border: 1px solid rgba(255,255,255,0.04);
+                border-top: 1px solid rgba(255,255,255,0.1);
+                border-radius: 12px;
+                padding: 12px 16px;
+                min-width: 120px;
+            }
+            .pomodoro-analytics-stat-value {
+                font-size: 22px;
+                font-weight: 200;
+                color: rgba(255,255,255,0.9);
+                font-family: monospace;
+            }
+            .pomodoro-analytics-stat-label {
+                font-size: 10px;
+                font-weight: 300;
+                letter-spacing: 1px;
+                color: rgba(255,255,255,0.5);
+            }
+            .pomodoro-streak-badge {
+                background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
+                border-top: 1px solid rgba(255,255,255,0.2);
+                border-radius: 12px;
+                padding: 10px 16px;
+            }
+            .pomodoro-streak-value {
+                font-size: 18px;
+                font-weight: 300;
+                color: #ffffff;
+                text-shadow: 0 0 8px rgba(255,255,255,0.3);
+            }
+            .pomodoro-streak-label {
+                font-size: 10px;
+                font-weight: 300;
+                color: rgba(255,255,255,0.6);
+            }
+            .pomodoro-task-mini-stat {
+                background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+                border-top: 1px solid rgba(255,255,255,0.1);
+                border-radius: 10px;
+                padding: 8px 14px;
+                min-width: 80px;
+            }
+            .pomodoro-task-mini-value {
+                font-size: 18px;
+                font-weight: 200;
+                color: #ffffff;
+                font-family: monospace;
+            }
+            .pomodoro-task-mini-label {
+                font-size: 9px;
+                font-weight: 300;
+                letter-spacing: 1px;
+                color: rgba(255,255,255,0.5);
+            }
+            .pomodoro-cat-legend-dot {
+                min-width: 10px;
+                min-height: 10px;
+                border-radius: 5px;
+            }
+        `;
+        try {
+            provider.load_from_string(css);
+        } catch (e) {
+            // Fallback for older GTK4 versions
+            provider.load_from_data(css, css.length);
+        }
+        Gtk.StyleContext.add_provider_for_display(
+            Gdk.Display.get_default(),
+            provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        );
+
+        // ══════════════════════════════════
+        // PAGE 0: HOME — Main App Interface
+        // ══════════════════════════════════
+        this._buildHomePage(window, settings);
+
+        // ══════════════════════════════════
+        // PAGE 1: Timer Settings
+        // ══════════════════════════════════
+        const timerPage = new Adw.PreferencesPage({
+            title: _('Timer'),
+            icon_name: 'preferences-system-time-symbolic',
+        });
+        window.add(timerPage);
+
+        // ── Work Duration ──
+        const timerGroup = new Adw.PreferencesGroup({
+            title: _('Session Durations'),
+            description: _('Configure how long each session lasts'),
+        });
+        timerPage.add(timerGroup);
+
+        const workRow = new Adw.SpinRow({
+            title: _('Work Duration'),
+            subtitle: _('Minutes per focus session'),
+            adjustment: new Gtk.Adjustment({
+                lower: 1, upper: 60, step_increment: 1, page_increment: 5, value: 25,
+            }),
+        });
+        settings.bind('work-duration', workRow, 'value', Gio.SettingsBindFlags.DEFAULT);
+        timerGroup.add(workRow);
+
+        const shortBreakRow = new Adw.SpinRow({
+            title: _('Short Break'),
+            subtitle: _('Minutes for short breaks'),
+            adjustment: new Gtk.Adjustment({
+                lower: 1, upper: 30, step_increment: 1, page_increment: 5, value: 5,
+            }),
+        });
+        settings.bind('short-break-duration', shortBreakRow, 'value', Gio.SettingsBindFlags.DEFAULT);
+        timerGroup.add(shortBreakRow);
+
+        const longBreakRow = new Adw.SpinRow({
+            title: _('Long Break'),
+            subtitle: _('Minutes for long breaks'),
+            adjustment: new Gtk.Adjustment({
+                lower: 1, upper: 60, step_increment: 1, page_increment: 5, value: 15,
+            }),
+        });
+        settings.bind('long-break-duration', longBreakRow, 'value', Gio.SettingsBindFlags.DEFAULT);
+        timerGroup.add(longBreakRow);
+
+        const intervalRow = new Adw.SpinRow({
+            title: _('Long Break Interval'),
+            subtitle: _('Pomodoros before a long break'),
+            adjustment: new Gtk.Adjustment({
+                lower: 2, upper: 8, step_increment: 1, page_increment: 1, value: 4,
+            }),
+        });
+        settings.bind('long-break-interval', intervalRow, 'value', Gio.SettingsBindFlags.DEFAULT);
+        timerGroup.add(intervalRow);
+
+        // ══════════════════════════════════
+        // PAGE 2: Behavior
+        // ══════════════════════════════════
+        const behaviorPage = new Adw.PreferencesPage({
+            title: _('Behavior'),
+            icon_name: 'preferences-other-symbolic',
+        });
+        window.add(behaviorPage);
+
+        // ── Focus Mode ──
+        const focusGroup = new Adw.PreferencesGroup({
+            title: _('Focus Enforcement'),
+            description: _('Settings that keep you accountable'),
+        });
+        behaviorPage.add(focusGroup);
+
+        const strictRow = new Adw.SwitchRow({
+            title: _('Strict Mode'),
+            subtitle: _('Hides pause &amp; skip buttons during work sessions — no escape!'),
+        });
+        settings.bind('strict-mode', strictRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        focusGroup.add(strictRow);
+
+        const autoWorkRow = new Adw.SwitchRow({
+            title: _('Auto-start Work'),
+            subtitle: _('Automatically begin work after break ends — no excuses'),
+        });
+        settings.bind('auto-start-work', autoWorkRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        focusGroup.add(autoWorkRow);
+
+        const autoBreakRow = new Adw.SwitchRow({
+            title: _('Auto-start Breaks'),
+            subtitle: _('Automatically begin break after work ends'),
+        });
+        settings.bind('auto-start-breaks', autoBreakRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        focusGroup.add(autoBreakRow);
+
+        // ── Notifications ──
+        const notifGroup = new Adw.PreferencesGroup({
+            title: _('Notifications'),
+        });
+        behaviorPage.add(notifGroup);
+
+        const notifRow = new Adw.SwitchRow({
+            title: _('Desktop Notifications'),
+            subtitle: _('Show notifications when sessions complete'),
+        });
+        settings.bind('show-notifications', notifRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        notifGroup.add(notifRow);
+
+        const soundRow = new Adw.SwitchRow({
+            title: _('Sound Notifications'),
+            subtitle: _('Play a chime when sessions complete'),
+        });
+        settings.bind('play-sound-notifications', soundRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        notifGroup.add(soundRow);
+
+        // ══════════════════════════════════
+        // PAGE 3: Appearance
+        // ══════════════════════════════════
+        const appearancePage = new Adw.PreferencesPage({
+            title: _('Appearance'),
+            icon_name: 'applications-graphics-symbolic',
+        });
+        window.add(appearancePage);
+
+        // ── Bar Dimensions ──
+        const dimGroup = new Adw.PreferencesGroup({
+            title: _('Bar Dimensions'),
+            description: _('Size of the progress bars on the top panel'),
+        });
+        appearancePage.add(dimGroup);
+
+        const widthRow = new Adw.SpinRow({
+            title: _('Bar Width'),
+            subtitle: _('Width in pixels (60–300)'),
+            adjustment: new Gtk.Adjustment({
+                lower: 60, upper: 300, step_increment: 10, page_increment: 20, value: 140,
+            }),
+        });
+        settings.bind('bar-width', widthRow, 'value', Gio.SettingsBindFlags.DEFAULT);
+        dimGroup.add(widthRow);
+
+        const heightRow = new Adw.SpinRow({
+            title: _('Bar Height'),
+            subtitle: _('Height in pixels (4–12)'),
+            adjustment: new Gtk.Adjustment({
+                lower: 4, upper: 12, step_increment: 1, page_increment: 2, value: 4,
+            }),
+        });
+        settings.bind('bar-height', heightRow, 'value', Gio.SettingsBindFlags.DEFAULT);
+        dimGroup.add(heightRow);
+
+        const radiusRow = new Adw.SpinRow({
+            title: _('Bar Corner Radius'),
+            subtitle: _('0 for rectangle, 99 for capsule'),
+            adjustment: new Gtk.Adjustment({
+                lower: 0, upper: 99, step_increment: 1, page_increment: 10, value: 99,
+            }),
+        });
+        settings.bind('bar-radius', radiusRow, 'value', Gio.SettingsBindFlags.DEFAULT);
+        dimGroup.add(radiusRow);
+
+        // ── Icon Customization ──
+        const iconGroup = new Adw.PreferencesGroup({
+            title: _('Icon Customization'),
+            description: _('Customize the top panel heart icon'),
+        });
+        appearancePage.add(iconGroup);
+
+        const iconColorButtons = {};
+
+        // Heart Color (base outline)
+        iconColorButtons['heart-color'] = this._addColorRow(iconGroup, settings, 'heart-color',
+            _('Heart Outline Color'), _('Base outline color of the heart (visible when not filled)'));
+
+        // Heart Progress Fill Color
+        iconColorButtons['heart-outline-color'] = this._addColorRow(iconGroup, settings, 'heart-outline-color',
+            _('Heart Progress Color'), _('Color that fills the heart outline as timer progresses'));
+
+        // ── Colors ──
+        const colorGroup = new Adw.PreferencesGroup({
+            title: _('Colors'),
+            description: _('Customize the glassmorphism bar colors'),
+        });
+        appearancePage.add(colorGroup);
+
+        // Store color button references for reset functionality
+        const colorButtons = {};
+
+        // Work color
+        colorButtons['work-bar-color'] = this._addColorRow(colorGroup, settings, 'work-bar-color',
+            _('Work Bar Color'), _('Color of the focus/work progress bar'));
+
+        // Break color
+        colorButtons['break-bar-color'] = this._addColorRow(colorGroup, settings, 'break-bar-color',
+            _('Break Bar Color'), _('Color of the break progress bar'));
+
+        // Idle color
+        colorButtons['idle-bar-color'] = this._addColorRow(colorGroup, settings, 'idle-bar-color',
+            _('Idle Pulse Color'), _('Color of the idle pulsing animation'));
+
+        const satRow = new Adw.SpinRow({
+            title: _('Color Saturation'),
+            subtitle: _('Multiplier (1.0 is default)'),
+            digits: 1,
+            adjustment: new Gtk.Adjustment({
+                lower: 0.0, upper: 2.0, step_increment: 0.1, page_increment: 0.5, value: 1.0,
+            }),
+        });
+        settings.bind('color-saturation', satRow, 'value', Gio.SettingsBindFlags.DEFAULT);
+        colorGroup.add(satRow);
+
+        const glowRow = new Adw.SpinRow({
+            title: _('Glow Intensity'),
+            subtitle: _('Spread of glow shadow in pixels'),
+            adjustment: new Gtk.Adjustment({
+                lower: 0, upper: 20, step_increment: 1, page_increment: 2, value: 3,
+            }),
+        });
+        settings.bind('glow-intensity', glowRow, 'value', Gio.SettingsBindFlags.DEFAULT);
+        colorGroup.add(glowRow);
+
+        // ── Reset Colors ──
+        const resetColorGroup = new Adw.PreferencesGroup({});
+        appearancePage.add(resetColorGroup);
+
+        const resetColorRow = new Adw.ActionRow({
+            title: _('Reset Colors to Default'),
+            subtitle: _('Restore the curated default color palette'),
+        });
+        const resetColorBtn = new Gtk.Button({
+            label: _('Reset'),
+            css_classes: ['suggested-action'],
+            valign: Gtk.Align.CENTER,
+        });
+
+        // Default colors matching the CSS glassmorphism aesthetic
+        const defaultColors = {
+            'work-bar-color': '#a3d5ff',
+            'break-bar-color': '#eaf2ff',
+            'idle-bar-color': '#ffffff',
+            'heart-color': '#999999',
+            'heart-outline-color': '#ff0000',
+        };
+
+        resetColorBtn.connect('clicked', () => {
+            for (const [key, hex] of Object.entries(defaultColors)) {
+                settings.set_string(key, hex);
+                // Update the color button UI immediately
+                let btn = colorButtons[key] || iconColorButtons[key];
+                if (btn) {
+                    const rgba = new Gdk.RGBA();
+                    if (rgba.parse(hex)) {
+                        btn.set_rgba(rgba);
+                    }
+                }
+            }
+        });
+        resetColorRow.add_suffix(resetColorBtn);
+        resetColorRow.set_activatable_widget(resetColorBtn);
+        resetColorGroup.add(resetColorRow);
+
+        // ══════════════════════════════════
+        // PAGE 4: Analytics — Detailed insights
+        // ══════════════════════════════════
+        this._buildAnalyticsPage(window, settings);
+
+        // ══════════════════════════════════
+        // PAGE 5: Tasks — Task management + mini analytics
+        // ══════════════════════════════════
+        this._buildTasksPage(window, settings);
+    }
+
+    _addColorRow(group, settings, key, title, subtitle) {
+        const row = new Adw.ActionRow({
+            title: title,
+            subtitle: subtitle,
+        });
+
+        const colorBtn = new Gtk.ColorDialogButton({
+            valign: Gtk.Align.CENTER,
+            dialog: new Gtk.ColorDialog(),
+        });
+
+        // Set initial color from settings
+        const colorStr = settings.get_string(key);
+        const rgba = new Gdk.RGBA();
+        if (rgba.parse(colorStr)) {
+            colorBtn.set_rgba(rgba);
+        }
+
+        // Update settings when color changes
+        colorBtn.connect('notify::rgba', () => {
+            const c = colorBtn.get_rgba();
+            const r = Math.round(c.red * 255).toString(16).padStart(2, '0');
+            const g = Math.round(c.green * 255).toString(16).padStart(2, '0');
+            const b = Math.round(c.blue * 255).toString(16).padStart(2, '0');
+            settings.set_string(key, `#${r}${g}${b}`);
+        });
+
+        row.add_suffix(colorBtn);
+        group.add(row);
+
+        return colorBtn;
+    }
+
+    // ══════════════════════════════════════════════════
+    //  HOME PAGE — Full app interface in a single tab
+    // ══════════════════════════════════════════════════
+
+    _buildHomePage(window, settings) {
+        const homePage = new Adw.PreferencesPage({
+            title: _('Home'),
+            icon_name: 'go-home-symbolic',
+        });
+        window.add(homePage);
+
+        // ── Timer Display Group ──
+        const timerGroup = new Adw.PreferencesGroup({});
+        homePage.add(timerGroup);
+
+        // Timer circle area using a DrawingArea + labels
+        const timerBox = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL,
+            halign: Gtk.Align.CENTER,
+            spacing: 8,
+            margin_top: 8,
+            margin_bottom: 8,
+        });
+
+        // Circle container with session ring overlay
+        const RING_SIZE = 240;
+        const circleOverlay = new Gtk.Overlay({
+            halign: Gtk.Align.CENTER,
+        });
+
+        // Session ring drawing area (behind the content)
+        const sessionRing = new Gtk.DrawingArea({
+            content_width: RING_SIZE,
+            content_height: RING_SIZE,
+            halign: Gtk.Align.CENTER,
+            valign: Gtk.Align.CENTER,
+        });
+
+        let _ringSessionsCompleted = settings.get_int('sessions-completed');
+        let _ringTotalSegments = settings.get_int('long-break-interval');
+
+        sessionRing.set_draw_func((area, cr, width, height) => {
+            const cx = width / 2;
+            const cy = height / 2;
+            const radius = Math.min(width, height) / 2 - 8;
+            const lineWidth = 3;
+            const gap = 0.06; // radians gap between segments
+            const totalSegs = Math.max(1, _ringTotalSegments);
+            const segAngle = (2 * Math.PI - totalSegs * gap) / totalSegs;
+            const startOffset = -Math.PI / 2; // Start at 12 o'clock
+
+            cr.setLineWidth(lineWidth);
+            cr.setLineCap(1); // ROUND
+
+            for (let i = 0; i < totalSegs; i++) {
+                const segStart = startOffset + i * (segAngle + gap);
+                const segEnd = segStart + segAngle;
+
+                if (i < _ringSessionsCompleted) {
+                    // Completed segment — soft accent
+                    cr.setSourceRGBA(0.75, 0.75, 0.75, 0.85);
+                } else {
+                    // Remaining segment — dim translucent
+                    cr.setSourceRGBA(1, 1, 1, 0.1);
+                }
+
+                cr.arc(cx, cy, radius, segStart, segEnd);
+                cr.stroke();
+            }
+        });
+
+        // The dark circle background (smaller than ring so ring is visible)
+        const circleFrame = new Gtk.Frame({
+            halign: Gtk.Align.CENTER,
+            valign: Gtk.Align.CENTER,
+            css_classes: ['pomodoro-home-timer-circle'],
+            width_request: RING_SIZE - 24,
+            height_request: RING_SIZE - 24,
+        });
+        const circleContent = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL,
+            halign: Gtk.Align.CENTER,
+            valign: Gtk.Align.CENTER,
+            spacing: 4,
+        });
+
+        // Heart icon
+        const heartIcon = new Gtk.Image({
+            icon_name: 'emblem-favorite-symbolic',
+            pixel_size: 22,
+            halign: Gtk.Align.CENTER,
+            css_classes: ['pomodoro-home-state-label'],
+        });
+        circleContent.append(heartIcon);
+
+        // State label (FOCUS / BREAK / IDLE)
+        const stateLabel = new Gtk.Label({
+            label: 'FOCUS',
+            halign: Gtk.Align.CENTER,
+            css_classes: ['pomodoro-home-state-label'],
+        });
+        circleContent.append(stateLabel);
+
+        // Big timer digits
+        const workDur = settings.get_int('work-duration');
+        const digitsLabel = new Gtk.Label({
+            label: `${workDur.toString().padStart(2, '0')}:00`,
+            halign: Gtk.Align.CENTER,
+            css_classes: ['pomodoro-home-digits'],
+        });
+        circleContent.append(digitsLabel);
+
+        // Control buttons row inside circle
+        const ctrlRow = new Gtk.Box({
+            orientation: Gtk.Orientation.HORIZONTAL,
+            halign: Gtk.Align.CENTER,
+            spacing: 12,
+            margin_top: 8,
+        });
+
+        const playBtn = new Gtk.Button({
+            icon_name: 'media-playback-start-symbolic',
+            css_classes: ['pomodoro-home-play-btn'],
+            halign: Gtk.Align.CENTER,
+            tooltip_text: _('Start / Pause'),
+        });
+        ctrlRow.append(playBtn);
+
+        circleContent.append(ctrlRow);
+        circleFrame.set_child(circleContent);
+
+        // Overlay: ring behind, circleFrame on top
+        circleOverlay.set_child(sessionRing);
+        circleOverlay.add_overlay(circleFrame);
+        timerBox.append(circleOverlay);
+
+        // Motivation text
+        const motivationLabel = new Gtk.Label({
+            label: 'Press play to start your focus session',
+            halign: Gtk.Align.CENTER,
+            css_classes: ['pomodoro-home-motivation'],
+            margin_top: 8,
+            wrap: true,
+            justify: Gtk.Justification.CENTER,
+            max_width_chars: 40,
+        });
+        timerBox.append(motivationLabel);
+
+        timerGroup.add(timerBox);
+
+        // ── Action Buttons (Skip / Reset) — shown contextually ──
+        const actionGroup = new Adw.PreferencesGroup({});
+        homePage.add(actionGroup);
+
+        const actionRow = new Gtk.Box({
+            orientation: Gtk.Orientation.HORIZONTAL,
+            halign: Gtk.Align.CENTER,
+            spacing: 12,
+            margin_top: 4,
+            margin_bottom: 4,
+        });
+
+        const skipBtn = new Gtk.Button({
+            icon_name: 'media-skip-forward-symbolic',
+            css_classes: ['pomodoro-home-ctrl-btn'],
+            sensitive: true,
+            tooltip_text: _('Skip current session'),
+        });
+        actionRow.append(skipBtn);
+
+        const resetBtn = new Gtk.Button({
+            icon_name: 'edit-clear-all-symbolic',
+            css_classes: ['pomodoro-home-ctrl-btn'],
+            sensitive: true,
+            tooltip_text: _('Reset timer'),
+        });
+        actionRow.append(resetBtn);
+
+        actionGroup.add(actionRow);
+
+        // ── Start Focus Session (category picker) ──
+        const startGroup = new Adw.PreferencesGroup({});
+        homePage.add(startGroup);
+
+        const categoryCombo = new Gtk.DropDown({
+            halign: Gtk.Align.CENTER,
+        });
+
+        // Build category list
+        const _refreshCategories = () => {
+            let cats = ['General'];
+            try {
+                let tasks = JSON.parse(settings.get_string('tasks'));
+                if (Array.isArray(tasks)) {
+                    tasks.forEach(t => {
+                        if (!t.done && t.category && !cats.includes(t.category)) {
+                            cats.push(t.category);
+                        }
+                    });
+                }
+            } catch (e) { }
+            categoryCombo.set_model(Gtk.StringList.new(cats));
+        };
+        _refreshCategories();
+
+        const startFocusBtn = new Gtk.Button({
+            label: _('Start Focus Session'),
+            icon_name: 'pomodoro-symbolic',
+            css_classes: ['pomodoro-home-start-btn'],
+            halign: Gtk.Align.FILL,
+            hexpand: true,
+        });
+
+        const _refreshRemainingLabel = () => {
+            let completed = settings.get_int('sessions-completed');
+            let total = settings.get_int('long-break-interval');
+            let remaining = Math.max(0, total - (completed % total));
+            let state = settings.get_string('timer-state');
+            if (state === 'work') {
+                startFocusBtn.set_label(_(`Session in progress... \u00B7 ${remaining} left`));
+            } else if (state === 'short_break' || state === 'long_break') {
+                startFocusBtn.set_label(_(`On break... \u00B7 ${remaining} left`));
+            } else {
+                startFocusBtn.set_label(_(`Start Focus Session \u00B7 ${remaining} left`));
+            }
+        };
+        _refreshRemainingLabel();
+
+        const startBox = new Gtk.Box({
+            orientation: Gtk.Orientation.HORIZONTAL,
+            spacing: 8,
+            halign: Gtk.Align.FILL,
+            hexpand: true,
+        });
+        startBox.append(categoryCombo);
+        startBox.append(startFocusBtn);
+        startGroup.add(startBox);
+
+        // ── Stats Card ──
+        const statsGroup = new Adw.PreferencesGroup({
+            title: _('Today'),
+        });
+        homePage.add(statsGroup);
+
+        const sessionsCompleted = settings.get_int('sessions-completed');
+        const totalFocusMins = settings.get_int('total-focus-minutes');
+        const hrs = Math.floor(totalFocusMins / 60);
+        const mns = totalFocusMins % 60;
+        const focusStr = hrs > 0 ? `${hrs}h ${mns}m` : `${mns}m`;
+
+        const statsRow = new Adw.ActionRow({
+            icon_name: 'chart-symbolic',
+            title: `${sessionsCompleted} pomodoro${sessionsCompleted !== 1 ? 's' : ''}`,
+            subtitle: `${focusStr} focused`,
+        });
+        statsRow.add_prefix(new Gtk.Image({
+            icon_name: 'utilities-system-monitor-symbolic',
+            pixel_size: 18,
+        }));
+        statsGroup.add(statsRow);
+
+        // ── Top 3 Tasks ──
+        const taskGroup = new Adw.PreferencesGroup({
+            title: _('Top 3 Tasks'),
+        });
+        homePage.add(taskGroup);
+
+        let _taskRows = [];
+        const _renderHomeTasks = () => {
+            for (const r of _taskRows) taskGroup.remove(r);
+            _taskRows = [];
+            let tasks = [];
+            try {
+                tasks = JSON.parse(settings.get_string('tasks'));
+                if (!Array.isArray(tasks)) tasks = [];
+            } catch (e) { tasks = []; }
+            let topTasks = tasks.filter(t => !t.done).slice(0, 3);
+            if (topTasks.length === 0) {
+                let emptyRow = new Adw.ActionRow({
+                    title: _('No active tasks'),
+                    subtitle: _('Add tasks from the Tasks tab'),
+                });
+                taskGroup.add(emptyRow);
+                _taskRows.push(emptyRow);
+                return;
+            }
+            topTasks.forEach((t, i) => {
+                let row = new Adw.ActionRow({
+                    title: t.text || '(unnamed)',
+                    subtitle: t.category || 'General',
+                });
+                let doneBtn = new Gtk.Button({
+                    icon_name: 'object-select-symbolic',
+                    valign: Gtk.Align.CENTER,
+                    tooltip_text: _('Mark done'),
+                    css_classes: ['flat'],
+                });
+                doneBtn.connect('clicked', () => {
+                    let allTasks = [];
+                    try {
+                        allTasks = JSON.parse(settings.get_string('tasks'));
+                        if (!Array.isArray(allTasks)) allTasks = [];
+                    } catch (e) { allTasks = []; }
+                    // Find the matching task by id
+                    let idx = allTasks.findIndex(at => at.id === t.id);
+                    if (idx >= 0) {
+                        allTasks[idx].done = true;
+                        allTasks[idx].completedAt = new Date().toISOString();
+                    }
+                    settings.set_string('tasks', JSON.stringify(allTasks));
+                    _renderHomeTasks();
+                    _refreshStats();
+                });
+                row.add_suffix(doneBtn);
+                taskGroup.add(row);
+                _taskRows.push(row);
+            });
+        };
+        _renderHomeTasks();
+
+        // ── Timer State Management (GTK side) ──
+        // We track a simple timer state to update the Home UI
+        let _homeState = settings.get_string('timer-state');
+        let _homePaused = settings.get_boolean('timer-is-paused');
+        let _homeDuration = settings.get_int('timer-duration-secs');
+        let _homeElapsed = settings.get_double('timer-elapsed-accumulated');
+        if (!_homePaused && _homeState !== 'idle') {
+            let start = settings.get_double('timer-start-time');
+            let now = GLib.get_monotonic_time();
+            _homeElapsed += (now - start) / 1000000;
+        }
+        let _homeTimerId = 0;
+        let _homeCategory = settings.get_string('timer-category');
+        let _homePomodoroCount = 0;
+        let _homeLastTick = GLib.get_monotonic_time();
+
+        const _formatTime = (secs) => {
+            if (!Number.isFinite(secs)) secs = 0;
+            secs = Math.max(0, Math.floor(secs));
+            let m = Math.floor(secs / 60);
+            let s = secs % 60;
+            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        };
+
+        const _refreshStats = () => {
+            let sc = settings.get_int('sessions-completed');
+            let fm = settings.get_int('total-focus-minutes');
+            let h = Math.floor(fm / 60);
+            let m = fm % 60;
+            let fs = h > 0 ? `${h}h ${m}m` : `${m}m`;
+            statsRow.set_title(`${sc} pomodoro${sc !== 1 ? 's' : ''}`);
+            statsRow.set_subtitle(`${fs} focused`);
+
+            // Update session ring
+            _ringSessionsCompleted = sc % _ringTotalSegments;
+            _ringTotalSegments = settings.get_int('long-break-interval');
+            sessionRing.queue_draw();
+
+            // Update remaining label
+            _refreshRemainingLabel();
+        };
+
+        const MOTIVATIONS = [
+            "When something is important enough, you do it even if the odds are not in your favor. — Elon Musk",
+            "If you get up in the morning and think the future is going to be better, it is a bright day. — Elon Musk",
+            "Impatience with actions, patience with results. — Naval Ravikant",
+            "The closer you are to the truth, the more silent you become inside. — Naval Ravikant",
+            "Arise, awake, and stop not till the goal is reached. — Swami Vivekananda",
+            "Take up one idea. Make that one idea your life. — Swami Vivekananda",
+            "You have the right to work, but never to the fruit of work. — Bhagavad Gita",
+            "A person can rise through the efforts of his own mind. — Bhagavad Gita",
+            "The Zeigarnik effect: You remember uncompleted tasks better. Finish this one.",
+            "Action precedes motivation. Start now, and the drive will follow."
+        ];
+        const _pickMotivation = () => {
+            const epochHours = Math.floor(Date.now() / (8 * 60 * 60 * 1000));
+            return MOTIVATIONS[epochHours % MOTIVATIONS.length];
+        };
+
+        const _updateHomeUI = () => {
+            let sessions = settings.get_int('sessions-completed');
+            let isStrict = settings.get_boolean('strict-mode');
+            if (_homeState === 'idle') {
+                stateLabel.set_label('FOCUS');
+                let wd = settings.get_int('work-duration');
+                digitsLabel.set_label(_formatTime(wd * 60));
+                playBtn.set_icon_name('media-playback-start-symbolic');
+                playBtn.set_sensitive(true);
+                skipBtn.set_sensitive(true);
+                resetBtn.set_sensitive(true);
+                startFocusBtn.set_sensitive(true);
+                _refreshRemainingLabel();
+                motivationLabel.set_label(sessions === 0 ? _pickMotivation('idle_zero') : _pickMotivation('idle_some'));
+            } else if (_homeState === 'work') {
+                let rem = Math.max(0, _homeDuration - _homeElapsed);
+                stateLabel.set_label('FOCUS');
+                digitsLabel.set_label(_formatTime(rem));
+                playBtn.set_icon_name(_homePaused ? 'media-playback-start-symbolic' : 'media-playback-pause-symbolic');
+                playBtn.set_sensitive(!isStrict);
+                skipBtn.set_sensitive(!isStrict);
+                resetBtn.set_sensitive(true);
+                startFocusBtn.set_sensitive(false);
+                _refreshRemainingLabel();
+                let progress = _homeDuration > 0 ? _homeElapsed / _homeDuration : 0;
+                if (progress < 0.3) motivationLabel.set_label(_pickMotivation('work_early'));
+                else if (progress < 0.7) motivationLabel.set_label(_pickMotivation('work_mid'));
+                else motivationLabel.set_label(_pickMotivation('work_late'));
+            } else {
+                let rem = Math.max(0, _homeDuration - _homeElapsed);
+                stateLabel.set_label(_homeState === 'long_break' ? 'LONG BREAK' : 'BREAK');
+                digitsLabel.set_label(_formatTime(rem));
+                playBtn.set_icon_name(_homePaused ? 'media-playback-start-symbolic' : 'media-playback-pause-symbolic');
+                playBtn.set_sensitive(true);
+                skipBtn.set_sensitive(true);
+                resetBtn.set_sensitive(true);
+                startFocusBtn.set_sensitive(false);
+                _refreshRemainingLabel();
+                motivationLabel.set_label(_pickMotivation('break_msg'));
+            }
+            _refreshStats();
+        };
+
+        const _stopHomeTimer = () => {
+            if (_homeTimerId) {
+                GLib.source_remove(_homeTimerId);
+                _homeTimerId = 0;
+            }
+        };
+
+        const _syncFromSettings = () => {
+            _homeState = settings.get_string('timer-state');
+            _homePaused = settings.get_boolean('timer-is-paused');
+            _homeDuration = settings.get_int('timer-duration-secs');
+            _homeCategory = settings.get_string('timer-category');
+
+            let acc = settings.get_double('timer-elapsed-accumulated');
+            if (!_homePaused && _homeState !== 'idle') {
+                let start = settings.get_double('timer-start-time');
+                let now = GLib.get_monotonic_time();
+                _homeElapsed = acc + (now - start) / 1000000;
+            } else {
+                _homeElapsed = acc;
+            }
+
+            if (_homeState !== 'idle') {
+                _startTimerLoop();
+            } else {
+                _stopHomeTimer();
+            }
+            _updateHomeUI();
+        };
+
+        let _syncDebounceId = 0;
+        const _queueSyncFromSettings = () => {
+            if (_syncDebounceId > 0) return;
+            _syncDebounceId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 50, () => {
+                _syncDebounceId = 0;
+                _syncFromSettings();
+                return GLib.SOURCE_REMOVE;
+            });
+        };
+
+        const stateChangedId = settings.connect('changed::timer-state', _queueSyncFromSettings);
+        const pauseChangedId = settings.connect('changed::timer-is-paused', _queueSyncFromSettings);
+        const durChangedId = settings.connect('changed::timer-duration-secs', _queueSyncFromSettings);
+        const startChangedId = settings.connect('changed::timer-start-time', _queueSyncFromSettings);
+        const workDurChangedId = settings.connect('changed::work-duration', () => {
+            if (_homeState === 'idle') _updateHomeUI();
+        });
+        const sessCompletedId = settings.connect('changed::sessions-completed', _refreshStats);
+        const focusMinsId = settings.connect('changed::total-focus-minutes', _refreshStats);
+
+        const _startTimerLoop = () => {
+            _stopHomeTimer();
+            _homeLastTick = GLib.get_monotonic_time();
+            _homeTimerId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
+                if (_homePaused) {
+                    _homeLastTick = GLib.get_monotonic_time();
+                    return GLib.SOURCE_CONTINUE;
+                }
+
+                let now = GLib.get_monotonic_time();
+                let deltaSecs = (now - _homeLastTick) / 1000000;
+                _homeLastTick = now;
+
+                _homeElapsed += deltaSecs;
+                if (_homeElapsed >= _homeDuration && _homeDuration > 0) {
+                    _homeElapsed = _homeDuration; // Cap it, extension handles transitions
+                }
+                _updateHomeUI();
+                return GLib.SOURCE_CONTINUE;
+            });
+        };
+
+        // Wire up buttons
+        playBtn.connect('clicked', () => {
+            if (_homeState === 'idle') {
+                let selected = categoryCombo.get_selected();
+                let model = categoryCombo.get_model();
+                let cat = model ? model.get_string(selected) || 'General' : 'General';
+                settings.set_string('timer-category', cat);
+                settings.set_string('timer-command', 'start-work');
+            } else {
+                settings.set_string('timer-command', _homePaused ? 'resume' : 'pause');
+            }
+        });
+
+        startFocusBtn.connect('clicked', () => {
+            if (_homeState === 'idle') {
+                let selected = categoryCombo.get_selected();
+                let model = categoryCombo.get_model();
+                let cat = model ? model.get_string(selected) || 'General' : 'General';
+                settings.set_string('timer-category', cat);
+                settings.set_string('timer-command', 'start-work');
+            }
+        });
+
+        skipBtn.connect('clicked', () => {
+            settings.set_string('timer-command', 'skip');
+        });
+
+        resetBtn.connect('clicked', () => {
+            settings.set_string('timer-command', 'reset');
+        });
+
+        // Listen for task changes to update list
+        const tasksChangedId = settings.connect('changed::tasks', () => {
+            _renderHomeTasks();
+            _refreshCategories();
+        });
+
+        // Cleanup on window close
+        window.connect('close-request', () => {
+            _stopHomeTimer();
+            if (_syncDebounceId > 0) {
+                GLib.source_remove(_syncDebounceId);
+                _syncDebounceId = 0;
+            }
+            if (tasksChangedId) settings.disconnect(tasksChangedId);
+            if (stateChangedId) settings.disconnect(stateChangedId);
+            if (pauseChangedId) settings.disconnect(pauseChangedId);
+            if (durChangedId) settings.disconnect(durChangedId);
+            if (startChangedId) settings.disconnect(startChangedId);
+            if (workDurChangedId) settings.disconnect(workDurChangedId);
+            if (sessCompletedId) settings.disconnect(sessCompletedId);
+            if (focusMinsId) settings.disconnect(focusMinsId);
+            return false;
+        });
+
+        if (_homeState !== 'idle') {
+            _startTimerLoop();
+        }
+        _updateHomeUI();
+    }
+
+    // ══════════════════════════════════════════════════
+    //  ANALYTICS PAGE — Detailed productivity insights
+    // ══════════════════════════════════════════════════
+
+    _buildAnalyticsPage(window, settings) {
+        const page = new Adw.PreferencesPage({
+            title: _('Analytics'),
+            icon_name: 'utilities-system-monitor-symbolic',
+        });
+        window.add(page);
+
+        // Helper
+        const _fmtTime = (m) => {
+            let h = Math.floor(m / 60);
+            let r = m % 60;
+            return h > 0 ? `${h}h ${r}m` : `${r}m`;
+        };
+        const _getTodayStr = () => {
+            let d = new Date();
+            return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+        };
+        const _readHistory = () => {
+            try {
+                let h = JSON.parse(settings.get_string('analytics-history'));
+                return Array.isArray(h) ? h : [];
+            } catch (e) { return []; }
+        };
+        const _readTaskStats = () => {
+            try {
+                let s = JSON.parse(settings.get_string('task-stats'));
+                return (s && typeof s === 'object') ? s : {};
+            } catch (e) { return {}; }
+        };
+        const _readTasks = () => {
+            try {
+                let t = JSON.parse(settings.get_string('tasks'));
+                return Array.isArray(t) ? t : [];
+            } catch (e) { return []; }
+        };
+
+        // ── 1. Today's Hero Card ──
+        const heroGroup = new Adw.PreferencesGroup({
+            title: _('Today\'s Focus'),
+        });
+        page.add(heroGroup);
+
+        let sessions = settings.get_int('sessions-completed');
+        let focusMins = settings.get_int('total-focus-minutes');
+
+        const heroSessionsRow = new Adw.ActionRow({
+            icon_name: 'pomodoro-symbolic',
+            title: _('Pomodoros Completed'),
+            subtitle: `${sessions} session${sessions !== 1 ? 's' : ''} today`,
+        });
+        const heroSessionsLabel = new Gtk.Label({
+            label: `${sessions}`,
+            css_classes: ['pomodoro-analytics-hero-value'],
+        });
+        heroSessionsRow.add_suffix(heroSessionsLabel);
+        heroGroup.add(heroSessionsRow);
+
+        const heroFocusRow = new Adw.ActionRow({
+            icon_name: 'preferences-system-time-symbolic',
+            title: _('Total Focus Time'),
+            subtitle: `${_fmtTime(focusMins)} of deep work`,
+        });
+        const heroFocusLabel = new Gtk.Label({
+            label: `${_fmtTime(focusMins)}`,
+            css_classes: ['pomodoro-analytics-stat-value'],
+        });
+        heroFocusRow.add_suffix(heroFocusLabel);
+        heroGroup.add(heroFocusRow);
+
+        // Average session length
+        let avgMins = sessions > 0 ? Math.round(focusMins / sessions) : 0;
+        const avgRow = new Adw.ActionRow({
+            title: _('Avg Session Length'),
+            subtitle: `${avgMins}m per pomodoro`,
+        });
+        heroGroup.add(avgRow);
+
+        let allTimeMins = settings.get_int('all-time-focus-minutes');
+        const allTimeRow = new Adw.ActionRow({
+            icon_name: 'emblem-favorite-symbolic',
+            title: _('Total Focus Time (All Time)'),
+            subtitle: `${_fmtTime(allTimeMins)} of deep work in total`,
+        });
+        const allTimeLabel = new Gtk.Label({
+            label: `${_fmtTime(allTimeMins)}`,
+            css_classes: ['pomodoro-analytics-stat-value'],
+        });
+        allTimeRow.add_suffix(allTimeLabel);
+        heroGroup.add(allTimeRow);
+
+        const _refreshHeroStats = () => {
+            let s = settings.get_int('sessions-completed');
+            let f = settings.get_int('total-focus-minutes');
+            heroSessionsRow.set_subtitle(`${s} session${s !== 1 ? 's' : ''} today`);
+            heroSessionsLabel.set_label(`${s}`);
+            heroFocusRow.set_subtitle(`${_fmtTime(f)} of deep work`);
+            heroFocusLabel.set_label(`${_fmtTime(f)}`);
+            let avg = s > 0 ? Math.round(f / s) : 0;
+            avgRow.set_subtitle(`${avg}m per pomodoro`);
+
+            let atm = settings.get_int('all-time-focus-minutes');
+            allTimeRow.set_subtitle(`${_fmtTime(atm)} of deep work in total`);
+            allTimeLabel.set_label(`${_fmtTime(atm)}`);
+        };
+
+        // ── 2. Streak ──
+        const streakGroup = new Adw.PreferencesGroup({
+            title: _('Streak'),
+        });
+        page.add(streakGroup);
+
+        const streakRow = new Adw.ActionRow({
+            icon_name: 'flame-symbolic',
+            title: _('Current Streak'),
+            subtitle: `0 days consecutive`,
+        });
+        const streakLabel = new Gtk.Label({
+            label: `0`,
+            css_classes: ['pomodoro-streak-value'],
+        });
+        streakRow.add_suffix(streakLabel);
+        streakGroup.add(streakRow);
+
+        const bestRow = new Adw.ActionRow({
+            title: _('Best Streak'),
+            subtitle: `Your all-time record`,
+        });
+        const bestLabel = new Gtk.Label({
+            label: `0`,
+            css_classes: ['pomodoro-streak-value'],
+        });
+        bestRow.add_suffix(bestLabel);
+        streakGroup.add(bestRow);
+
+        const _refreshStreakStats = () => {
+            let history = _readHistory();
+            let currentStreak = 0;
+            let today = _getTodayStr();
+            let sess = settings.get_int('sessions-completed');
+            let sortedDates = history.map(e => e.date).filter(d => d);
+            if (sess > 0 && !sortedDates.includes(today)) sortedDates.push(today);
+            sortedDates = [...new Set(sortedDates)].sort().reverse();
+
+            let expected = new Date();
+            if (sortedDates.length > 0 && sortedDates[0] !== today) {
+                let y = new Date();
+                y.setDate(y.getDate() - 1);
+                let yStr = `${y.getFullYear()}-${(y.getMonth() + 1).toString().padStart(2, '0')}-${y.getDate().toString().padStart(2, '0')}`;
+                if (sortedDates[0] === yStr) {
+                    expected.setDate(expected.getDate() - 1);
+                }
+            }
+
+            for (let i = 0; i < sortedDates.length; i++) {
+                let expStr = `${expected.getFullYear()}-${(expected.getMonth() + 1).toString().padStart(2, '0')}-${expected.getDate().toString().padStart(2, '0')}`;
+                if (sortedDates[i] === expStr) {
+                    currentStreak++;
+                    expected.setDate(expected.getDate() - 1);
+                } else {
+                    break;
+                }
+            }
+            let bestStreak = settings.get_int('best-streak');
+            if (currentStreak > bestStreak) {
+                bestStreak = currentStreak;
+                settings.set_int('best-streak', bestStreak);
+            }
+            streakRow.set_subtitle(`${currentStreak} day${currentStreak !== 1 ? 's' : ''} consecutive`);
+            streakLabel.set_label(`${currentStreak}`);
+            bestRow.set_subtitle(`Your all-time record`);
+            bestLabel.set_label(`${bestStreak}`);
+        };
+        _refreshStreakStats();
+
+        // ── 3. Category Breakdown (pie chart + legend) ──
+        const catGroup = new Adw.PreferencesGroup({
+            title: _(' Category Breakdown'),
+            description: _('Time spent per category today'),
+        });
+        page.add(catGroup);
+
+        const CHART_COLORS = [
+            [0.0, 0.83, 1.0], [0.0, 1.0, 0.4], [1.0, 0.18, 0.47],
+            [1.0, 0.8, 0.0], [0.6, 0.2, 1.0], [1.0, 0.5, 0.0],
+        ];
+
+        const pieChart = new Gtk.DrawingArea({
+            width_request: 160, height_request: 160,
+            halign: Gtk.Align.CENTER, margin_bottom: 8,
+        });
+        pieChart.set_draw_func((area, cr, w, h) => {
+            let tStats = _readTaskStats();
+            let total = 0;
+            for (let c in tStats) total += tStats[c];
+            let cx = w / 2, cy = h / 2, r = Math.min(cx, cy) - 8;
+            if (r <= 0) return;
+            // Draw donut
+            let innerR = r * 0.55;
+            if (total === 0) {
+                cr.setSourceRGBA(0.5, 0.5, 0.5, 0.15);
+                cr.arc(cx, cy, r, 0, 2 * Math.PI);
+                cr.arc(cx, cy, innerR, 0, 2 * Math.PI);
+                cr.setFillRule(1); // EVEN_ODD
+                cr.fill();
+                return;
+            }
+            let angle = -Math.PI / 2, i = 0;
+            for (let c in tStats) {
+                let sweep = (tStats[c] / total) * 2 * Math.PI;
+                if (sweep <= 0) { i++; continue; }
+                cr.moveTo(cx + innerR * Math.cos(angle), cy + innerR * Math.sin(angle));
+                cr.arc(cx, cy, r, angle, angle + sweep);
+                cr.arc(cx, cy, innerR, angle + sweep, angle);
+                cr.closePath();
+                let col = CHART_COLORS[i % CHART_COLORS.length];
+                cr.setSourceRGBA(col[0], col[1], col[2], 0.85);
+                cr.fillPreserve();
+                cr.setSourceRGBA(0, 0, 0, 0.3); cr.setLineWidth(1); cr.stroke();
+                angle += sweep; i++;
+            }
+            // Center text
+            cr.setSourceRGBA(1, 1, 1, 0.8);
+            cr.selectFontFace('monospace', 0, 0);
+            cr.setFontSize(14);
+            let txt = _fmtTime(total);
+            let ext = cr.textExtents(txt);
+            cr.moveTo(cx - ext.width / 2, cy + ext.height / 2);
+            cr.showText(txt);
+        });
+        catGroup.add(pieChart);
+
+        // Legend rows
+        let taskStats = _readTaskStats();
+        let catTotal = 0;
+        for (let c in taskStats) catTotal += taskStats[c];
+        let ci = 0;
+        for (let cat in taskStats) {
+            let mins = taskStats[cat];
+            let pct = catTotal > 0 ? Math.round((mins / catTotal) * 100) : 0;
+            let col = CHART_COLORS[ci % CHART_COLORS.length];
+            let hexCol = `rgb(${Math.round(col[0] * 255)},${Math.round(col[1] * 255)},${Math.round(col[2] * 255)})`;
+            let catRow = new Adw.ActionRow({
+                title: cat,
+                subtitle: `${_fmtTime(mins)} · ${pct}%`,
+            });
+            let dot = new Gtk.DrawingArea({ width_request: 12, height_request: 12, valign: Gtk.Align.CENTER });
+            const capturedCol = col;
+            dot.set_draw_func((a, cr2, w2, h2) => {
+                cr2.setSourceRGBA(capturedCol[0], capturedCol[1], capturedCol[2], 1);
+                cr2.arc(w2 / 2, h2 / 2, 5, 0, 2 * Math.PI);
+                cr2.fill();
+            });
+            catRow.add_prefix(dot);
+            catGroup.add(catRow);
+            ci++;
+        }
+        if (ci === 0) {
+            catGroup.add(new Adw.ActionRow({
+                title: _('No data yet'),
+                subtitle: _('Complete a focus session to see category breakdown'),
+            }));
+        }
+
+        // ── 4. 7-Day History Bar Chart ──
+        const weekGroup = new Adw.PreferencesGroup({
+            title: _(' Last 7 Days'),
+            description: _('Daily focus minutes'),
+        });
+        page.add(weekGroup);
+
+        const barChart = new Gtk.DrawingArea({
+            width_request: 380, height_request: 140,
+            halign: Gtk.Align.CENTER, margin_top: 4, margin_bottom: 4,
+        });
+        barChart.set_draw_func((area, cr, w, h) => {
+            let hist = _readHistory();
+            let dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            let days = [];
+            for (let i = 6; i >= 0; i--) {
+                let d = new Date();
+                d.setDate(d.getDate() - i);
+                let ds = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+                let entry = hist.find(e => e.date === ds);
+                let mins = entry ? entry.focusMinutes : 0;
+                if (i === 0) mins = settings.get_int('total-focus-minutes');
+                days.push({ label: dayNames[d.getDay()], mins, isToday: i === 0 });
+            }
+            let maxVal = Math.max(1, ...days.map(d => d.mins));
+            let barW = 36, gap = 12, leftPad = 30;
+            let chartW = days.length * (barW + gap) - gap;
+            let startX = (w - chartW) / 2;
+            let chartH = h - 30;
+            // Grid lines
+            cr.setSourceRGBA(1, 1, 1, 0.06);
+            for (let g = 0; g <= 4; g++) {
+                let gy = 10 + (chartH - 10) * (1 - g / 4);
+                cr.moveTo(startX - 5, gy); cr.lineTo(startX + chartW, gy);
+                cr.setLineWidth(0.5); cr.stroke();
+                cr.setSourceRGBA(1, 1, 1, 0.25);
+                cr.selectFontFace('monospace', 0, 0); cr.setFontSize(8);
+                let gVal = Math.round(maxVal * g / 4);
+                cr.moveTo(startX - 28, gy + 3);
+                cr.showText(`${gVal}m`);
+                cr.setSourceRGBA(1, 1, 1, 0.06);
+            }
+            // Bars
+            days.forEach((d, i) => {
+                let x = startX + i * (barW + gap);
+                let barH = d.mins > 0 ? Math.max(3, (d.mins / maxVal) * (chartH - 10)) : 0;
+                let y = 10 + (chartH - 10) - barH;
+                if (d.isToday) cr.setSourceRGBA(1, 0.18, 0.47, 0.8);
+                else cr.setSourceRGBA(0, 0.83, 1.0, 0.5);
+                // Rounded rect
+                let rr = 4;
+                cr.moveTo(x + rr, y);
+                cr.lineTo(x + barW - rr, y);
+                cr.arc(x + barW - rr, y + rr, rr, -Math.PI / 2, 0);
+                cr.lineTo(x + barW, 10 + chartH - 10);
+                cr.lineTo(x, 10 + chartH - 10);
+                cr.lineTo(x, y + rr);
+                cr.arc(x + rr, y + rr, rr, Math.PI, 3 * Math.PI / 2);
+                cr.closePath();
+                cr.fill();
+                // Label
+                cr.setSourceRGBA(1, 1, 1, d.isToday ? 0.8 : 0.4);
+                cr.selectFontFace('monospace', 0, 0); cr.setFontSize(9);
+                let ext = cr.textExtents(d.label);
+                cr.moveTo(x + barW / 2 - ext.width / 2, h - 5);
+                cr.showText(d.label);
+                // Value on top
+                if (d.mins > 0) {
+                    cr.setSourceRGBA(1, 1, 1, 0.6);
+                    cr.setFontSize(8);
+                    let vt = `${d.mins}`;
+                    let ve = cr.textExtents(vt);
+                    cr.moveTo(x + barW / 2 - ve.width / 2, y - 4);
+                    cr.showText(vt);
+                }
+            });
+        });
+        weekGroup.add(barChart);
+
+        // ── 5. Task Completion Stats ──
+        const taskStatGroup = new Adw.PreferencesGroup({
+            title: _('Task Completion'),
+        });
+        page.add(taskStatGroup);
+
+        let tasks = _readTasks();
+        let totalTasks = tasks.length;
+        let doneTasks = tasks.filter(t => t.done).length;
+        let activeTasks = totalTasks - doneTasks;
+        let compRate = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+
+        const totalTasksRow = new Adw.ActionRow({
+            title: _('Total Tasks'), subtitle: `${totalTasks} created`,
+        });
+        taskStatGroup.add(totalTasksRow);
+
+        const doneTasksRow = new Adw.ActionRow({
+            title: _('Completed'), subtitle: `${doneTasks} finished`,
+        });
+        taskStatGroup.add(doneTasksRow);
+
+        const activeTasksRow = new Adw.ActionRow({
+            title: _('Active'), subtitle: `${activeTasks} remaining`,
+        });
+        taskStatGroup.add(activeTasksRow);
+
+        const rateRow = new Adw.ActionRow({
+            title: _('Completion Rate'),
+        });
+        const rateLabel = new Gtk.Label({
+            label: `${compRate}%`,
+            css_classes: ['pomodoro-analytics-stat-value'],
+        });
+        rateRow.add_suffix(rateLabel);
+        taskStatGroup.add(rateRow);
+
+        const _refreshTaskStats = () => {
+            let t = _readTasks();
+            let tot = t.length;
+            let dn = t.filter(x => x.done).length;
+            let act = tot - dn;
+            let rt = tot > 0 ? Math.round((dn / tot) * 100) : 0;
+            totalTasksRow.set_subtitle(`${tot} created`);
+            doneTasksRow.set_subtitle(`${dn} finished`);
+            activeTasksRow.set_subtitle(`${act} remaining`);
+            rateLabel.set_label(`${rt}%`);
+        };
+
+        // ── 6. Reset ──
+        const resetGroup = new Adw.PreferencesGroup({
+            title: _(' Reset'),
+        });
+        page.add(resetGroup);
+
+        const resetRow = new Adw.ActionRow({
+            title: _('Reset Today\'s Stats'),
+            subtitle: _('Clear session count and focus time for today'),
+        });
+        const resetBtn = new Gtk.Button({
+            label: _('Reset Today'),
+            css_classes: ['destructive-action'],
+            valign: Gtk.Align.CENTER,
+        });
+        resetBtn.connect('clicked', () => {
+            settings.set_int('sessions-completed', 0);
+            settings.set_int('total-focus-minutes', 0);
+            settings.set_string('task-stats', '{}');
+            heroSessionsRow.set_subtitle('0 sessions today');
+            heroSessionsLabel.set_label('0');
+            heroFocusRow.set_subtitle('0m of deep work');
+            heroFocusLabel.set_label('0m');
+            avgRow.set_subtitle('0m per pomodoro');
+            pieChart.queue_draw();
+            barChart.queue_draw();
+        });
+        resetRow.add_suffix(resetBtn);
+        resetRow.set_activatable_widget(resetBtn);
+        resetGroup.add(resetRow);
+
+        const resetAllRow = new Adw.ActionRow({
+            title: _('Reset All History'),
+            subtitle: _('Clear all analytics data and streaks'),
+        });
+        const resetAllBtn = new Gtk.Button({
+            label: _('Reset All'),
+            css_classes: ['destructive-action'],
+            valign: Gtk.Align.CENTER,
+        });
+        resetAllBtn.connect('clicked', () => {
+            settings.set_int('sessions-completed', 0);
+            settings.set_int('total-focus-minutes', 0);
+            settings.set_int('all-time-focus-minutes', 0);
+            settings.set_string('task-stats', '{}');
+            settings.set_string('analytics-history', '[]');
+            settings.set_int('best-streak', 0);
+            heroSessionsRow.set_subtitle('0 sessions today');
+            heroSessionsLabel.set_label('0');
+            heroFocusRow.set_subtitle('0m of deep work');
+            heroFocusLabel.set_label('0m');
+            avgRow.set_subtitle('0m per pomodoro');
+            streakRow.set_subtitle('0 days consecutive');
+            bestRow.set_subtitle('Your all-time record');
+            pieChart.queue_draw();
+            barChart.queue_draw();
+        });
+        resetAllRow.add_suffix(resetAllBtn);
+        resetAllRow.set_activatable_widget(resetAllBtn);
+        resetGroup.add(resetAllRow);
+
+        // Redraw charts on stats change
+        const sid1 = settings.connect('changed::task-stats', () => pieChart.queue_draw());
+        const sid2 = settings.connect('changed::sessions-completed', () => {
+            barChart.queue_draw();
+            _refreshHeroStats();
+            _refreshStreakStats();
+        });
+        const sid3 = settings.connect('changed::tasks', () => _refreshTaskStats());
+        const sid4 = settings.connect('changed::total-focus-minutes', () => _refreshHeroStats());
+        const sid5 = settings.connect('changed::analytics-history', () => _refreshStreakStats());
+        
+        window.connect('close-request', () => {
+            settings.disconnect(sid1);
+            settings.disconnect(sid2);
+            settings.disconnect(sid3);
+            settings.disconnect(sid4);
+            settings.disconnect(sid5);
+            return false;
+        });
+    }
+
+    // ══════════════════════════════════════════════════
+    //  TASKS PAGE — Task management + mini analytics
+    // ══════════════════════════════════════════════════
+
+    _buildTasksPage(window, settings) {
+        const page = new Adw.PreferencesPage({
+            title: _('Tasks'),
+            icon_name: 'view-list-symbolic',
+        });
+        window.add(page);
+
+        const _readTasks = () => {
+            try {
+                let t = JSON.parse(settings.get_string('tasks'));
+                return Array.isArray(t) ? t : [];
+            } catch (e) { return []; }
+        };
+
+        // ── Mini Analytics Summary ──
+        const miniGroup = new Adw.PreferencesGroup({
+            title: _('Task Overview'),
+        });
+        page.add(miniGroup);
+
+        let tasks = _readTasks();
+        let total = tasks.length;
+        let done = tasks.filter(t => t.done).length;
+        let active = total - done;
+        let rate = total > 0 ? Math.round((done / total) * 100) : 0;
+
+        const summaryTotalRow = new Adw.ActionRow({ title: _('Total Tasks'), icon_name: 'task-symbolic' });
+        const summaryTotalLabel = new Gtk.Label({ label: `${total}`, css_classes: ['title-2'] });
+        summaryTotalRow.add_suffix(summaryTotalLabel);
+        miniGroup.add(summaryTotalRow);
+
+        const summaryDoneRow = new Adw.ActionRow({ title: _('Completed'), icon_name: 'check-symbolic' });
+        const summaryDoneLabel = new Gtk.Label({ label: `${done}`, css_classes: ['title-2'] });
+        summaryDoneRow.add_suffix(summaryDoneLabel);
+        miniGroup.add(summaryDoneRow);
+
+        const summaryActiveRow = new Adw.ActionRow({ title: _('Remaining') });
+        const summaryActiveLabel = new Gtk.Label({ label: `${active}`, css_classes: ['title-2'] });
+        summaryActiveRow.add_suffix(summaryActiveLabel);
+        miniGroup.add(summaryActiveRow);
+
+        const summaryRateRow = new Adw.ActionRow({ title: _('Completion Rate') });
+        const summaryRateLabel = new Gtk.Label({ label: `${rate}%`, css_classes: ['title-2'] });
+        summaryRateRow.add_suffix(summaryRateLabel);
+        miniGroup.add(summaryRateRow);
+
+        const _refreshMiniStats = () => {
+            let t = _readTasks();
+            let tot = t.length, dn = t.filter(x => x.done).length;
+            let act = tot - dn, rt = tot > 0 ? Math.round((dn / tot) * 100) : 0;
+            summaryTotalLabel.set_label(`${tot}`);
+            summaryDoneLabel.set_label(`${dn}`);
+            summaryActiveLabel.set_label(`${act}`);
+            summaryRateLabel.set_label(`${rt}%`);
+        };
+
+        // ── Create New Task ──
+        const entryGroup = new Adw.PreferencesGroup({
+            title: _('Create New Task'),
+        });
+        page.add(entryGroup);
+
+        const taskNameRow = new Adw.EntryRow({ title: _('Task Name') });
+        entryGroup.add(taskNameRow);
+
+        const taskCatRow = new Adw.EntryRow({ title: _('Category (optional)') });
+        entryGroup.add(taskCatRow);
+
+        const addBtn = new Gtk.Button({
+            label: _('Add Task'),
+            css_classes: ['suggested-action'],
+            margin_top: 12,
+        });
+        entryGroup.add(addBtn);
+
+        // ── Active Tasks ──
+        const activeGroup = new Adw.PreferencesGroup({
+            title: _('Active Tasks'),
+        });
+        page.add(activeGroup);
+
+        // ── Completed Tasks ──
+        const doneGroup = new Adw.PreferencesGroup({
+            title: _('Completed Tasks'),
+        });
+        page.add(doneGroup);
+
+        let _activeRows = [];
+        let _doneRows = [];
+
+        const renderTasks = () => {
+            for (const r of _activeRows) activeGroup.remove(r);
+            for (const r of _doneRows) doneGroup.remove(r);
+            _activeRows = [];
+            _doneRows = [];
+
+            let allTasks = _readTasks();
+
+            // Active tasks
+            let activeTasks = allTasks.filter(t => !t.done);
+            if (activeTasks.length === 0) {
+                let emptyRow = new Adw.ActionRow({
+                    title: _('No active tasks'),
+                    subtitle: _('Add a task above to get started'),
+                });
+                activeGroup.add(emptyRow);
+                _activeRows.push(emptyRow);
+            } else {
+                activeTasks.forEach(t => {
+                    let pomInfo = t.pomodorosSpent ? ` · ${t.pomodorosSpent} Pomo` : '';
+                    let row = new Adw.ActionRow({
+                        title: t.text || '(unnamed)',
+                        subtitle: `${t.category || 'General'}${pomInfo}`,
+                    });
+                    // Mark done button
+                    let doneBtn = new Gtk.Button({
+                        icon_name: 'object-select-symbolic',
+                        valign: Gtk.Align.CENTER,
+                        tooltip_text: _('Mark as done'),
+                        css_classes: ['suggested-action'],
+                    });
+                    doneBtn.connect('clicked', () => {
+                        let cur = _readTasks();
+                        let idx = cur.findIndex(x => x.id === t.id);
+                        if (idx >= 0) {
+                            cur[idx].done = true;
+                            cur[idx].completedAt = new Date().toISOString();
+                        }
+                        settings.set_string('tasks', JSON.stringify(cur));
+                        renderTasks();
+                        _refreshMiniStats();
+                    });
+                    row.add_suffix(doneBtn);
+                    // Delete button
+                    let delBtn = new Gtk.Button({
+                        icon_name: 'user-trash-symbolic',
+                        valign: Gtk.Align.CENTER,
+                        css_classes: ['destructive-action'],
+                    });
+                    delBtn.connect('clicked', () => {
+                        let cur = _readTasks();
+                        let idx = cur.findIndex(x => x.id === t.id);
+                        if (idx >= 0) cur.splice(idx, 1);
+                        settings.set_string('tasks', JSON.stringify(cur));
+                        renderTasks();
+                        _refreshMiniStats();
+                    });
+                    row.add_suffix(delBtn);
+                    activeGroup.add(row);
+                    _activeRows.push(row);
+                });
+            }
+
+            // Completed tasks
+            let completedTasks = allTasks.filter(t => t.done);
+            if (completedTasks.length === 0) {
+                let emptyRow = new Adw.ActionRow({
+                    title: _('No completed tasks yet'),
+                    subtitle: _('Finish tasks to see them here'),
+                });
+                doneGroup.add(emptyRow);
+                _doneRows.push(emptyRow);
+            } else {
+                completedTasks.forEach(t => {
+                    let dateStr = '';
+                    if (t.completedAt) {
+                        try {
+                            let d = new Date(t.completedAt);
+                            dateStr = ` · ${d.toLocaleDateString()}`;
+                        } catch (e) { }
+                    }
+                    let pomInfo = t.pomodorosSpent ? ` · ${t.pomodorosSpent} Pomo` : '';
+                    let row = new Adw.ActionRow({
+                        title: `${t.text || '(unnamed)'}`,
+                        subtitle: `${t.category || 'General'}${pomInfo}${dateStr}`,
+                    });
+                    // Undo button
+                    let undoBtn = new Gtk.Button({
+                        icon_name: 'edit-undo-symbolic',
+                        valign: Gtk.Align.CENTER,
+                        tooltip_text: _('Send back to active tasks'),
+                        css_classes: ['flat'],
+                    });
+                    undoBtn.connect('clicked', () => {
+                        let cur = _readTasks();
+                        let idx = cur.findIndex(x => x.id === t.id);
+                        if (idx >= 0) {
+                            cur[idx].done = false;
+                            cur[idx].completedAt = null;
+                        }
+                        settings.set_string('tasks', JSON.stringify(cur));
+                        renderTasks();
+                        _refreshMiniStats();
+                    });
+                    row.add_suffix(undoBtn);
+
+                    // Delete button
+                    let delBtn = new Gtk.Button({
+                        icon_name: 'user-trash-symbolic',
+                        valign: Gtk.Align.CENTER,
+                        css_classes: ['destructive-action', 'flat'],
+                    });
+                    delBtn.connect('clicked', () => {
+                        let cur = _readTasks();
+                        let idx = cur.findIndex(x => x.id === t.id);
+                        if (idx >= 0) cur.splice(idx, 1);
+                        settings.set_string('tasks', JSON.stringify(cur));
+                        renderTasks();
+                        _refreshMiniStats();
+                    });
+                    row.add_suffix(delBtn);
+                    doneGroup.add(row);
+                    _doneRows.push(row);
+                });
+            }
+        };
+        renderTasks();
+
+        addBtn.connect('clicked', () => {
+            let name = taskNameRow.get_text().trim();
+            let cat = taskCatRow.get_text().trim() || 'General';
+            if (name) {
+                let cur = _readTasks();
+                cur.push({
+                    text: name, category: cat, done: false,
+                    id: Date.now(), pomodorosSpent: 0, completedAt: null,
+                });
+                settings.set_string('tasks', JSON.stringify(cur));
+                taskNameRow.set_text('');
+                taskCatRow.set_text('');
+                renderTasks();
+                _refreshMiniStats();
+            }
+        });
+
+        // Listen for external task changes
+        const taskSid = settings.connect('changed::tasks', () => {
+            renderTasks();
+            _refreshMiniStats();
+        });
+        window.connect('close-request', () => {
+            settings.disconnect(taskSid);
+            return false;
+        });
+    }
+}
