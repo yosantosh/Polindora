@@ -96,7 +96,7 @@ mkdir -p "$EXT_DIR"
 
 # Copy files
 echo -e "${PURPLE}📦 Deploying extension files...${NC}"
-FILES_TO_COPY=("extension.js" "prefs.js" "metadata.json" "stylesheet.css" "schemas" "icons")
+FILES_TO_COPY=("extension.js" "prefs.js" "metadata.json" "stylesheet.css" "schemas" "icons" "quotes.js")
 
 for item in "${FILES_TO_COPY[@]}"; do
     if [ -e "$SCRIPT_DIR/$item" ]; then

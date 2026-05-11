@@ -183,7 +183,12 @@
       <description>Longest consecutive days with at least 1 pomodoro</description>
     </key>
 
-    <!-- Timer IPC: prefs writes commands, extension reads them -->
+    <key name="bday-surprise" type="b">
+      <default>false</default>
+      <summary>Birthday Surprise Trigger</summary>
+      <description>Trigger birthday surprise animation</description>
+    </key>
+
     <key name="timer-command" type="s">
       <default>''</default>
       <summary>Timer command from prefs</summary>

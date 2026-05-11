@@ -618,6 +618,20 @@
     box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.03);
 }
 
+.pomodoro-menu-motivation-item {
+    font-size: 12px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.5);
+    padding: 8px 24px;
+    text-align: center;
+    max-width: 200px;
+}
+
+.pomodoro-menu-motivation-item StLabel {
+    white-space: normal;
+}
+
 /* ── Separators — Light beam gradient lines ── */
 .pomodoro-menu-separator {
     background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.08) 30%, rgba(80, 180, 255, 0.06) 50%, rgba(255, 255, 255, 0.08) 70%, transparent 100%);

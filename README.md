@@ -1,7 +1,6 @@
 # Polindora — Premium Focus Timer
 
-![Polindora UI Mockup](https://raw.githubusercontent.com/yosantosh/Polindora/main/assets/preview_mockup.png)
-*Note: The image above is a conceptual mockup of the Polindora aesthetic.*
+![alt text](<Screenshot From 2026-05-11 05-59-07.png>) ![alt text](<Screenshot From 2026-05-11 05-58-40.png>)
 
 Polindora is a stunning, **dark glassmorphism-inspired** Pomodoro Timer for GNOME Shell. Designed for users who value both productivity and high-end aesthetics, it seamlessly integrates into your workflow with a unique top-panel progress indicator and a powerful, feature-rich preferences suite.
 

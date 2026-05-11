@@ -14,6 +14,7 @@ import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import { getTimedQuote } from './quotes.js';
 
 // Timer states
 const State = {
@@ -646,6 +647,15 @@ export default class PomodoroTimerExtension extends Extension {
         });
         this._indicator.menu.addMenuItem(this._pauseItem);
 
+        // Add a separator and the motivational quote
+        this._indicator.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this._quoteItem = new PopupMenu.PopupMenuItem(getTimedQuote(8), {
+            reactive: false,
+            style_class: 'pomodoro-menu-motivation-item'
+        });
+        this._indicator.menu.addMenuItem(this._quoteItem);
+        this._indicator.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
         // Add a menu item that opens the preferences window
         const prefsItem = new PopupMenu.PopupMenuItem('Open Polindora');
         prefsItem.connect('activate', () => {
@@ -659,6 +669,13 @@ export default class PomodoroTimerExtension extends Extension {
             }
         });
         this._indicator.menu.addMenuItem(prefsItem);
+
+        // Refresh quote when menu is opened
+        this._indicator.menu.connect('open-state-changed', (menu, open) => {
+            if (open) {
+                this._quoteItem.label.text = getTimedQuote(8);
+            }
+        });
 
         // Apply theme to the menu actor
         this._updateMenuTheme();
@@ -1111,7 +1128,12 @@ export default class PomodoroTimerExtension extends Extension {
         if (key === 'sessions-completed' || key === 'total-focus-minutes' ||
             key === 'last-session-date' || key === 'task-stats' ||
             key === 'tasks' || key === 'analytics-history' ||
-            key === 'best-streak' || key === 'timer-category') {
+            key === 'best-streak') {
+            return;
+        }
+
+        if (key === 'timer-category') {
+            this._currentCategory = this._settings.get_string('timer-category') || 'General';
             return;
         }
 

@@ -12,6 +12,8 @@ import Gdk from 'gi://Gdk?version=4.0';
 import { ExtensionPreferences, gettext as _ } from
     'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
+import { getTimedQuote } from './quotes.js';
+
 export default class PomodoroPreferences extends ExtensionPreferences {
 
     fillPreferencesWindow(window) {
@@ -32,8 +34,11 @@ export default class PomodoroPreferences extends ExtensionPreferences {
             settings.set_string('last-session-date', today);
         }
 
+        const todayD = new Date();
+        const isBday = (todayD.getMonth() === 2 && todayD.getDate() === 4);
+
         window.set_default_size(480, 720);
-        window.set_title(_("Polindora"));
+        window.set_title(isBday ? _("🎉 Polindora 🎊") : _("Polindora"));
         window.add_css_class('pomodoro-prefs-window');
 
         try {
@@ -302,6 +307,26 @@ export default class PomodoroPreferences extends ExtensionPreferences {
                 min-width: 10px;
                 min-height: 10px;
                 border-radius: 5px;
+            }
+            .bday-surprise-text {
+                font-size: 24px;
+                font-weight: 800;
+                color: #ff1493;
+                text-shadow: 0 0 10px #ff69b4, 0 0 20px #ffb6c1;
+                opacity: 0;
+            }
+            .show-bday-surprise .bday-surprise-text {
+                opacity: 1;
+                transition: opacity 0.5s ease 0.5s;
+            }
+            .pomodoro-home-heart, .pomodoro-home-state-label, .pomodoro-home-digits, .pomodoro-home-play-btn {
+                transition: opacity 0.5s ease;
+            }
+            .show-bday-surprise .pomodoro-home-heart,
+            .show-bday-surprise .pomodoro-home-state-label,
+            .show-bday-surprise .pomodoro-home-digits,
+            .show-bday-surprise .pomodoro-home-play-btn {
+                opacity: 0;
             }
         `;
         try {
@@ -762,6 +787,26 @@ export default class PomodoroPreferences extends ExtensionPreferences {
             halign: Gtk.Align.CENTER,
             css_classes: ['pomodoro-home-heart'],
         });
+
+        const _checkBday = () => {
+            const d = new Date();
+            const m = d.getMonth();
+            const dt = d.getDate();
+            return (m === 2 && dt === 4);
+        };
+
+        const heartClick = new Gtk.GestureClick();
+        heartClick.connect('pressed', () => {
+            if (_checkBday()) settings.set_boolean('bday-surprise', true);
+        });
+        heartIcon.add_controller(heartClick);
+
+        const heartHover = new Gtk.EventControllerMotion();
+        heartHover.connect('enter', () => {
+            if (_checkBday()) settings.set_boolean('bday-surprise', true);
+        });
+        heartIcon.add_controller(heartHover);
+
         circleContent.append(heartIcon);
 
         // State label (FOCUS / BREAK / IDLE)
@@ -798,7 +843,35 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         ctrlRow.append(playBtn);
 
         circleContent.append(ctrlRow);
-        circleFrame.set_child(circleContent);
+
+        const innerOverlay = new Gtk.Overlay();
+        innerOverlay.set_child(circleContent);
+
+        const bdayLabel = new Gtk.Label({
+            label: 'Happy Birthday P_S 🎂🎉',
+            halign: Gtk.Align.CENTER,
+            valign: Gtk.Align.CENTER,
+            css_classes: ['bday-surprise-text'],
+            wrap: true,
+            justify: Gtk.Justification.CENTER,
+        });
+        innerOverlay.add_overlay(bdayLabel);
+        circleFrame.set_child(innerOverlay);
+
+        settings.connect('changed::bday-surprise', () => {
+            if (settings.get_boolean('bday-surprise')) {
+                circleFrame.add_css_class('show-bday-surprise');
+                GLib.timeout_add(GLib.PRIORITY_DEFAULT, 8000, () => {
+                    settings.set_boolean('bday-surprise', false);
+                    return GLib.SOURCE_REMOVE;
+                });
+            } else {
+                circleFrame.remove_css_class('show-bday-surprise');
+            }
+        });
+        if (settings.get_boolean('bday-surprise')) {
+            circleFrame.add_css_class('show-bday-surprise');
+        }
 
         // Overlay: ring behind, circleFrame on top
         circleOverlay.set_child(sessionRing);
@@ -866,7 +939,9 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         });
 
         // Build category list (normalized + deduplicated)
+        let _isRefreshingCats = false;
         const _refreshCategories = () => {
+            _isRefreshingCats = true;
             let cats = ['General'];
             try {
                 let tasks = JSON.parse(settings.get_string('tasks'));
@@ -881,9 +956,30 @@ export default class PomodoroPreferences extends ExtensionPreferences {
                     });
                 }
             } catch (e) { }
+
+            let currentCat = settings.get_string('timer-category') || 'General';
+            if (!cats.includes(currentCat)) {
+                cats.push(currentCat);
+            }
+
             categoryCombo.set_model(Gtk.StringList.new(cats));
+            let idx = cats.indexOf(currentCat);
+            if (idx >= 0) {
+                categoryCombo.set_selected(idx);
+            }
+            _isRefreshingCats = false;
         };
         _refreshCategories();
+
+        categoryCombo.connect('notify::selected', () => {
+            if (_isRefreshingCats) return;
+            let selected = categoryCombo.get_selected();
+            let model = categoryCombo.get_model();
+            if (model) {
+                let cat = _normalizeCategory(model.get_string(selected));
+                settings.set_string('timer-category', cat);
+            }
+        });
 
         const startFocusBtn = new Gtk.Button({
             label: _('Start Focus Session'),
@@ -1040,28 +1136,14 @@ export default class PomodoroPreferences extends ExtensionPreferences {
             _refreshRemainingLabel();
         };
 
-        const MOTIVATIONS = [
-            "When something is important enough, you do it even if the odds are not in your favor. — Elon Musk",
-            "If you get up in the morning and think the future is going to be better, it is a bright day. — Elon Musk",
-            "Impatience with actions, patience with results. — Naval Ravikant",
-            "The closer you are to the truth, the more silent you become inside. — Naval Ravikant",
-            "Arise, awake, and stop not till the goal is reached. — Swami Vivekananda",
-            "Take up one idea. Make that one idea your life. — Swami Vivekananda",
-            "You have the right to work, but never to the fruit of work. — Bhagavad Gita",
-            "A person can rise through the efforts of his own mind. — Bhagavad Gita",
-            "The Zeigarnik effect: You remember uncompleted tasks better. Finish this one.",
-            "Action precedes motivation. Start now, and the drive will follow."
-        ];
         const _pickMotivation = () => {
-            const epochHours = Math.floor(Date.now() / (8 * 60 * 60 * 1000));
-            return MOTIVATIONS[epochHours % MOTIVATIONS.length];
+            return getTimedQuote(8);
         };
 
         const _updateHomeUI = () => {
             let sessions = settings.get_int('sessions-completed');
             let isStrict = settings.get_boolean('strict-mode');
-            // Bug 1: Hide category picker during active session
-            categoryCombo.set_visible(_homeState === 'idle');
+            categoryCombo.set_visible(true);
             if (_homeState === 'idle') {
                 stateLabel.set_label('FOCUS');
                 let wd = settings.get_int('work-duration');
