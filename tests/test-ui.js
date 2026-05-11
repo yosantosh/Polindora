@@ -7,7 +7,7 @@ console.log("=== POMODORO UI TEST SCRIPT ===");
 
 // 1. Verify files exist
 const cssFile = 'stylesheet.css';
-const htmlFile = 'preview.html';
+const htmlFile = 'previews/preview.html';
 
 if (!fs.existsSync(cssFile) || !fs.existsSync(htmlFile)) {
     console.error(`[ERROR] Missing required files: ${cssFile} or ${htmlFile}`);
@@ -58,14 +58,18 @@ if (issues === 0) {
     console.log(`\n[FAIL] Found ${issues} potential issue(s). Please review the warnings above.`);
 }
 
-console.log("\n--- Launching Visual Preview ---");
-console.log("Opening preview.html in your default web browser for visual inspection...");
+if (process.env.POLINDORA_OPEN_PREVIEW === '1') {
+    console.log("\n--- Launching Visual Preview ---");
+    console.log(`Opening ${htmlFile} in your default web browser for visual inspection...`);
 
-// Launch browser depending on OS (Linux uses xdg-open)
-exec(`xdg-open ${htmlFile}`, (error) => {
-    if (error) {
-        console.error(`Failed to automatically open browser. Please open ${htmlFile} manually.`);
-    } else {
-        console.log("Preview launched successfully.");
-    }
-});
+    // Launch browser depending on OS (Linux uses xdg-open)
+    exec(`xdg-open ${htmlFile}`, (error) => {
+        if (error) {
+            console.error(`Failed to automatically open browser. Please open ${htmlFile} manually.`);
+        } else {
+            console.log("Preview launched successfully.");
+        }
+    });
+} else {
+    console.log(`\n[INFO] Visual preview available at ${htmlFile}. Set POLINDORA_OPEN_PREVIEW=1 to open it.`);
+}

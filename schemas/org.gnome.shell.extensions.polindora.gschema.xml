@@ -120,6 +120,18 @@
       <description>Color of the progress outline around the heart (hex)</description>
     </key>
 
+    <key name="icon-style" type="s">
+      <default>'heart-outline'</default>
+      <summary>Panel icon style</summary>
+      <description>Selected panel icon style: heart-outline, heart-solid, ring, flame</description>
+    </key>
+
+    <key name="theme-name" type="s">
+      <default>'default'</default>
+      <summary>App theme</summary>
+      <description>Currently selected theme (default, black-pink)</description>
+    </key>
+
     <!-- State (persisted across restarts) -->
     <key name="sessions-completed" type="i">
       <default>0</default>

@@ -31,14 +31,16 @@
 .pomodoro-bar-outer {
     border-radius: 99px;
     padding: 0;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.03);
 }
 
 .pomodoro-bar-track {
     border-radius: 99px;
-    background: rgba(0, 0, 0, 0.8);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.85);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.95),
+                inset 0 -1px 1px rgba(255, 255, 255, 0.04);
     border: none;
 }
 
@@ -50,25 +52,25 @@
     transition-timing-function: linear;
 }
 
-/* Bright white glow for the fill to match the image */
+/* Bright white glow — 5-layer liquid halo */
 .pomodoro-work-fill {
     background: #ffffff;
-    box-shadow: 0 0 6px rgba(255, 255, 255, 0.8), 0 0 12px rgba(255, 255, 255, 0.4), 0 0 24px rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.9), 0 0 8px rgba(255, 255, 255, 0.6), 0 0 16px rgba(255, 255, 255, 0.3), 0 0 32px rgba(255, 255, 255, 0.12), 0 0 48px rgba(200, 230, 255, 0.06);
 }
 
 .pomodoro-break-fill {
     background: #eaf2ff;
-    box-shadow: 0 0 5px rgba(234, 242, 255, 0.8), 0 0 10px rgba(234, 242, 255, 0.4), 0 0 20px rgba(234, 242, 255, 0.2);
+    box-shadow: 0 0 4px rgba(234, 242, 255, 0.9), 0 0 8px rgba(234, 242, 255, 0.6), 0 0 16px rgba(234, 242, 255, 0.3), 0 0 32px rgba(234, 242, 255, 0.12), 0 0 48px rgba(180, 210, 255, 0.06);
 }
 
 .pomodoro-work-fill-urgent {
     background: #ffffff;
-    box-shadow: 0 0 8px rgba(255, 255, 255, 1.0), 0 0 16px rgba(163, 213, 255, 0.6), 0 0 32px rgba(163, 213, 255, 0.4);
+    box-shadow: 0 0 6px rgba(255, 255, 255, 1.0), 0 0 12px rgba(163, 213, 255, 0.7), 0 0 24px rgba(163, 213, 255, 0.4), 0 0 40px rgba(163, 213, 255, 0.2), 0 0 56px rgba(130, 190, 255, 0.08);
 }
 
 .pomodoro-complete-fill {
     background: #ffffff;
-    box-shadow: 0 0 8px rgba(255, 255, 255, 1.0), 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 6px rgba(255, 255, 255, 1.0), 0 0 14px rgba(255, 255, 255, 0.8), 0 0 28px rgba(255, 255, 255, 0.4), 0 0 48px rgba(255, 255, 255, 0.2), 0 0 64px rgba(200, 230, 255, 0.1);
 }
 
 .pomodoro-bar-shine {
@@ -110,13 +112,27 @@
    POPUP MENU — Extreme Dark Glassmorphism
    ══════════════════════════════════════════ */
 
-/* The root popup menu styling — simulating the fluid wave blobs */
+/* The root popup menu styling — layered fluid wave blobs with color */
 .popup-menu-content {
-    background-color: #02060a;
+    background-color: #000000;
     background-image: 
-        radial-gradient(ellipse at 10% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 40%),
-        radial-gradient(ellipse at 90% 70%, rgba(163, 213, 255, 0.04) 0%, transparent 50%),
-        radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
+        radial-gradient(ellipse 120% 80% at 8% 25%, rgba(40, 120, 255, 0.03) 0%, transparent 50%),
+        radial-gradient(ellipse 100% 90% at 92% 75%, rgba(120, 80, 255, 0.02) 0%, transparent 50%),
+        radial-gradient(ellipse 80% 60% at 50% 10%, rgba(255, 255, 255, 0.015) 0%, transparent 45%),
+        radial-gradient(ellipse 90% 70% at 70% 50%, rgba(80, 200, 180, 0.015) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 80% at 20% 80%, rgba(160, 120, 255, 0.01) 0%, transparent 50%);
+    transition: background-image 1s ease, background-color 1s ease;
+}
+
+.theme-black-pink .popup-menu-content {
+    background-color: #000000;
+    background-image: 
+        radial-gradient(ellipse 120% 80% at 0% 0%, rgba(255, 0, 128, 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse 100% 90% at 100% 100%, rgba(255, 105, 180, 0.10) 0%, transparent 50%),
+        radial-gradient(ellipse 80% 60% at 50% 10%, rgba(255, 220, 235, 0.04) 0%, transparent 45%),
+        radial-gradient(ellipse 90% 70% at 70% 40%, rgba(255, 20, 147, 0.08) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 80% at 20% 80%, rgba(199, 21, 133, 0.07) 0%, transparent 50%);
+    box-shadow: inset 0 0 100px rgba(255, 0, 128, 0.03);
 }
 
 /* ── Menu Header ── */
@@ -141,27 +157,30 @@
     padding: 32px 24px 24px;
     margin: 8px 16px 16px;
     border-radius: 40px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
-    backdrop-filter: blur(30px);
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
-    border-left: 1px solid rgba(255, 255, 255, 0.08);
-    border-right: 1px solid rgba(255, 255, 255, 0.02);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.6);
-    box-shadow: inset 0 2px 20px rgba(255, 255, 255, 0.02),
-                0 20px 60px rgba(0, 0, 0, 0.8);
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%);
+    border-top: 1.5px solid rgba(255, 255, 255, 0.3);
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.8);
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.15),
+                inset 0 4px 24px rgba(255, 255, 255, 0.03),
+                0 24px 64px rgba(0, 0, 0, 0.9),
+                0 0 40px rgba(255, 255, 255, 0.04);
 }
 
-/* Circular timer ring container — Dark Hole Effect */
+/* Circular timer ring container — Glass Orb with breathing depth */
 .pomodoro-timer-circle {
     width: 240px;
     height: 240px;
     border-radius: 120px;
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
-    background: radial-gradient(circle at center, #010204 0%, #03080e 100%);
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.8),
-                inset 0 6px 20px rgba(0, 0, 0, 0.9),
-                inset 0 -1px 4px rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1.5px solid rgba(255, 255, 255, 0.25);
+    background: radial-gradient(circle at 50% 30%, #080a0e 0%, #03060a 50%, #000000 100%);
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.9),
+                0 0 30px rgba(255, 255, 255, 0.05),
+                inset 0 10px 30px rgba(0, 0, 0, 0.95),
+                inset 0 -3px 10px rgba(255, 255, 255, 0.08),
+                inset 0 0 50px rgba(0, 0, 0, 0.6);
 }
 
 /* Timer state label (FOCUS / BREAK) */
@@ -196,32 +215,34 @@
     width: 44px;
     height: 44px;
     border-radius: 22px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%);
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
     border-bottom: 1px solid rgba(0, 0, 0, 0.5);
-    box-shadow: inset 0 1px 4px rgba(255, 255, 255, 0.1),
-                0 6px 16px rgba(0, 0, 0, 0.6),
-                inset 0 -2px 6px rgba(0, 0, 0, 0.4);
+    box-shadow: inset 0 1px 6px rgba(255, 255, 255, 0.12),
+                0 6px 20px rgba(0, 0, 0, 0.6),
+                inset 0 -2px 6px rgba(0, 0, 0, 0.4),
+                0 0 12px rgba(80, 180, 255, 0.04);
     margin-top: 12px;
     display: flex;
     justify-content: center;
     align-items: center;
     transition-property: background, box-shadow, transform;
-    transition-duration: 250ms;
+    transition-duration: 300ms;
     transition-timing-function: ease-out;
 }
 
 .pomodoro-timer-play-btn:hover {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%);
-    box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.2),
-                0 8px 20px rgba(0, 0, 0, 0.7),
-                inset 0 -2px 6px rgba(0, 0, 0, 0.5);
-    transform: scale(1.03);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 100%);
+    box-shadow: inset 0 2px 8px rgba(255, 255, 255, 0.25),
+                0 8px 24px rgba(0, 0, 0, 0.7),
+                inset 0 -2px 6px rgba(0, 0, 0, 0.5),
+                0 0 20px rgba(80, 180, 255, 0.08);
+    transform: scale(1.05);
 }
 
 .pomodoro-timer-play-btn:active {
-    box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.6);
-    transform: scale(0.97);
+    box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.7);
+    transform: scale(0.95);
 }
 
 .pomodoro-timer-play-icon {
@@ -256,19 +277,20 @@
     letter-spacing: 0.5px;
 }
 
-/* ── Stats Card — Very glossy pill ── */
+/* ── Stats Card — Elevated glass pane ── */
 .pomodoro-stats-card {
     padding: 18px 24px;
     margin: 8px 16px 16px;
     border-radius: 24px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%);
-    backdrop-filter: blur(24px);
-    border-top: 1.5px solid rgba(255, 255, 255, 0.2);
-    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.015) 100%);
+    border-top: 1.5px solid rgba(255, 255, 255, 0.24);
+    border-left: 1px solid rgba(255, 255, 255, 0.10);
     border-right: 1px solid rgba(0, 0, 0, 0.2);
     border-bottom: 1px solid rgba(0, 0, 0, 0.6);
-    box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.08),
-                0 12px 30px rgba(0, 0, 0, 0.6);
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.10),
+                inset 0 2px 4px rgba(255, 255, 255, 0.04),
+                0 12px 30px rgba(0, 0, 0, 0.6),
+                0 0 20px rgba(80, 180, 255, 0.02);
 }
 
 .pomodoro-stats-icon {
@@ -341,21 +363,21 @@
     color: #ffffff;
 }
 
-/* Task List Wrapper (Glass Box) */
+/* Task List Wrapper (Elevated Glass Box) */
 .pomodoro-task-box {
     margin: 0 16px 16px;
     padding: 8px 0;
     border-radius: 24px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 100%);
-    backdrop-filter: blur(24px);
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
-    border-left: 1px solid rgba(255, 255, 255, 0.06);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.012) 100%);
+    border-top: 1.5px solid rgba(255, 255, 255, 0.18);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
     border-bottom: 1px solid rgba(0, 0, 0, 0.6);
-    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.05),
-                0 10px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.07),
+                0 10px 30px rgba(0, 0, 0, 0.5),
+                0 0 16px rgba(80, 180, 255, 0.02);
 }
 
-/* Task Item Row (Transparent, line separated) */
+/* Task Item Row (Fluid hover with traveling glow) */
 .pomodoro-task-row {
     padding: 14px 20px;
     margin: 0;
@@ -363,8 +385,8 @@
     background: transparent;
     border: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-    transition-property: background, transform;
-    transition-duration: 300ms;
+    transition-property: background, transform, box-shadow;
+    transition-duration: 350ms;
     transition-timing-function: ease-out;
 }
 
@@ -373,8 +395,9 @@
 }
 
 .pomodoro-task-row:hover {
-    background: rgba(255, 255, 255, 0.03);
-    transform: translateX(4px);
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.06) 40%, rgba(255, 255, 255, 0.08) 70%, transparent 100%);
+    transform: translateX(6px);
+    box-shadow: inset 0 0 16px rgba(255, 255, 255, 0.03);
 }
 
 /* Circular checkbox (thin outline) */
@@ -440,35 +463,38 @@
     padding: 20px;
 }
 
-/* ── Start Focus Session Button (Elongated Glass Pill) ── */
+/* ── Start Focus Session Button (Liquid Glass Pill) ── */
 .pomodoro-start-session-btn {
     padding: 16px 24px;
     margin: 16px 16px 24px;
     border-radius: 32px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%);
-    border-top: 1.5px solid rgba(255, 255, 255, 0.25);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.6);
-    border-left: 1px solid rgba(255, 255, 255, 0.08);
-    border-right: 1px solid rgba(0, 0, 0, 0.2);
-    box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.1),
-                0 12px 36px rgba(0, 0, 0, 0.6);
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.03) 100%);
+    border-top: 1.5px solid rgba(255, 255, 255, 0.40);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.8);
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+    border-right: 1px solid rgba(0, 0, 0, 0.4);
+    box-shadow: inset 0 1px 4px rgba(255, 255, 255, 0.15),
+                inset 0 4px 12px rgba(255, 255, 255, 0.08),
+                0 16px 40px rgba(0, 0, 0, 0.8),
+                0 0 24px rgba(255, 255, 255, 0.05);
     transition-property: background, box-shadow, transform;
-    transition-duration: 300ms;
+    transition-duration: 350ms;
     transition-timing-function: ease-out;
 }
 
 .pomodoro-start-session-btn:hover {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 100%);
-    border-top: 1.5px solid rgba(255, 255, 255, 0.35);
-    box-shadow: inset 0 2px 8px rgba(255, 255, 255, 0.15),
-                0 16px 40px rgba(0, 0, 0, 0.7);
-    transform: scale(1.02);
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.06) 100%);
+    border-top: 1.5px solid rgba(255, 255, 255, 0.50);
+    box-shadow: inset 0 2px 10px rgba(255, 255, 255, 0.22),
+                0 20px 48px rgba(0, 0, 0, 0.9),
+                0 0 32px rgba(255, 255, 255, 0.08);
+    transform: scale(1.04);
 }
 
 .pomodoro-start-session-btn:active {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 100%);
-    box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.6);
-    transform: scale(0.98);
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%);
+    box-shadow: inset 0 6px 18px rgba(0, 0, 0, 0.8);
+    transform: scale(0.96);
 }
 
 .pomodoro-start-session-icon {
@@ -580,20 +606,21 @@
     font-size: 14px;
     font-weight: 300;
     color: rgba(255, 255, 255, 0.7);
-    transition-property: background, color, transform;
-    transition-duration: 300ms;
+    transition-property: background, color, transform, box-shadow;
+    transition-duration: 350ms;
     transition-timing-function: ease-out;
 }
 
 .pomodoro-action-item:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0%, rgba(80, 180, 255, 0.04) 50%, rgba(255, 255, 255, 0.06) 100%);
     color: #ffffff;
     transform: translateX(4px);
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.03);
 }
 
-/* ── Separators ── */
+/* ── Separators — Light beam gradient lines ── */
 .pomodoro-menu-separator {
-    background-color: rgba(255, 255, 255, 0.05);
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.08) 30%, rgba(80, 180, 255, 0.06) 50%, rgba(255, 255, 255, 0.08) 70%, transparent 100%);
     height: 1px;
     margin: 12px 24px;
 }

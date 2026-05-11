@@ -93,6 +93,6 @@ assertEqual(adjustSaturation('#ff0000', 1.0), '#ff0000', 'adjustSaturation red n
 assertEqual(adjustSaturation('#ff0000', 0.0), '#808080', 'adjustSaturation red to grayscale');
 assertEqual(adjustSaturation('#00d4ff', 1.5), '#00d4ff', 'adjustSaturation cyan oversaturated');
 assertEqual(adjustSaturation('invalid', 1.0), 'invalid', 'adjustSaturation invalid length');
-assertEqual(adjustSaturation('#zzzzzz', 1.0), '#NaNNaNNaN', 'adjustSaturation invalid hex'); // Current logic returns #NaNNaNNaN if not guarded. Let's test if it handles it.
+assertEqual(adjustSaturation('#zzzzzz', 1.0), '#zzzzzz', 'adjustSaturation invalid hex returns original hex securely');
 
 print(`\nResults: ${passed} passed, ${failed} failed.`);

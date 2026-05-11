@@ -35,7 +35,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         window.set_default_size(480, 720);
         window.set_title(_("Polindora"));
         window.add_css_class('pomodoro-prefs-window');
-        
+
         try {
             let gtkSettings = Gtk.Settings.get_default();
             if (gtkSettings) {
@@ -48,32 +48,69 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         // Add custom glassmorphism styling
         const provider = new Gtk.CssProvider();
         const css = `
+            /* ── Animated fluid background ── */
+            @keyframes fluid-drift {
+                0%   { background-position: 0% 0%, 100% 100%, 50% 0%, 30% 60%, 80% 20%; }
+                25%  { background-position: 10% 20%, 80% 80%, 60% 15%, 20% 40%, 90% 35%; }
+                50%  { background-position: 20% 40%, 60% 60%, 40% 30%, 40% 20%, 70% 50%; }
+                75%  { background-position: 5% 25%, 90% 70%, 55% 10%, 25% 50%, 85% 30%; }
+                100% { background-position: 0% 0%, 100% 100%, 50% 0%, 30% 60%, 80% 20%; }
+            }
+            @keyframes breathe-glow {
+                0%   { box-shadow: 0 0 50px rgba(0,0,0,0.8), 0 0 20px rgba(80,180,255,0.03), inset 0 8px 24px rgba(0,0,0,0.9), inset 0 -2px 6px rgba(255,255,255,0.04), inset 0 0 40px rgba(0,0,0,0.4); }
+                50%  { box-shadow: 0 0 50px rgba(0,0,0,0.8), 0 0 30px rgba(80,180,255,0.06), inset 0 8px 24px rgba(0,0,0,0.85), inset 0 -2px 8px rgba(255,255,255,0.06), inset 0 0 40px rgba(0,0,0,0.35); }
+                100% { box-shadow: 0 0 50px rgba(0,0,0,0.8), 0 0 20px rgba(80,180,255,0.03), inset 0 8px 24px rgba(0,0,0,0.9), inset 0 -2px 6px rgba(255,255,255,0.04), inset 0 0 40px rgba(0,0,0,0.4); }
+            }
             window.pomodoro-prefs-window {
-                background: radial-gradient(circle at center, #050b12 0%, #02060a 100%);
+                background-color: #000000;
+                background-image:
+                    radial-gradient(ellipse 140% 100% at 8% 25%, rgba(40,120,255,0.03) 0%, transparent 50%),
+                    radial-gradient(ellipse 120% 100% at 92% 75%, rgba(120,80,255,0.02) 0%, transparent 50%),
+                    radial-gradient(ellipse 100% 80% at 50% 10%, rgba(255,255,255,0.015) 0%, transparent 45%),
+                    radial-gradient(ellipse 100% 80% at 30% 60%, rgba(80,200,180,0.015) 0%, transparent 55%),
+                    radial-gradient(ellipse 80% 100% at 80% 20%, rgba(160,120,255,0.01) 0%, transparent 50%);
+                background-size: 200% 200%, 200% 200%, 200% 200%, 200% 200%, 200% 200%;
+                animation: fluid-drift 40s ease-in-out infinite;
+                transition: background-image 1s ease, background-color 1s ease;
+            }
+            window.pomodoro-prefs-window.theme-black-pink {
+                background-color: #000000;
+                background-image:
+                    radial-gradient(ellipse 140% 100% at 8% 25%, rgba(255,0,128,0.07) 0%, transparent 50%),
+                    radial-gradient(ellipse 120% 100% at 92% 75%, rgba(255,105,180,0.06) 0%, transparent 50%),
+                    radial-gradient(ellipse 100% 80% at 50% 10%, rgba(255,220,235,0.03) 0%, transparent 45%),
+                    radial-gradient(ellipse 100% 80% at 30% 60%, rgba(255,20,147,0.05) 0%, transparent 55%),
+                    radial-gradient(ellipse 80% 100% at 80% 20%, rgba(199,21,133,0.04) 0%, transparent 50%);
             }
             window.pomodoro-prefs-window .boxed-list {
-                background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
+                background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.015));
                 border: 1px solid rgba(255,255,255,0.06);
-                border-top: 1px solid rgba(255,255,255,0.12);
+                border-top: 1.5px solid rgba(255,255,255,0.18);
                 border-radius: 16px;
-                box-shadow: inset 0 1px 1px rgba(255,255,255,0.05), 0 4px 12px rgba(0,0,0,0.4);
+                box-shadow: inset 0 1px 2px rgba(255,255,255,0.08), 0 4px 16px rgba(0,0,0,0.5), 0 0 20px rgba(80,180,255,0.02);
             }
             window.pomodoro-prefs-window row {
                 background: transparent;
-                border-bottom: 1px solid rgba(255,255,255,0.02);
+                border-bottom: 1px solid rgba(255,255,255,0.03);
+                transition: background 300ms ease-out, box-shadow 300ms ease-out;
+            }
+            window.pomodoro-prefs-window row:hover {
+                background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.02) 50%, transparent 100%);
+                box-shadow: inset 0 0 10px rgba(255,255,255,0.01);
             }
             window.pomodoro-prefs-window row:last-child {
                 border-bottom: none;
             }
             .pomodoro-home-timer-circle {
-                background: radial-gradient(circle at center, #010204 0%, #03080e 100%);
-                border: 1px solid rgba(255,255,255,0.04);
-                border-top: 1px solid rgba(255,255,255,0.12);
+                background: radial-gradient(circle at center, #010204 0%, #030a12 60%, #050d18 100%);
+                border: 1px solid rgba(255,255,255,0.05);
+                border-top: 1.5px solid rgba(255,255,255,0.18);
                 border-radius: 120px;
                 padding: 24px;
                 min-width: 200px;
                 min-height: 200px;
-                box-shadow: 0 0 40px rgba(0,0,0,0.8), inset 0 6px 20px rgba(0,0,0,0.9);
+                box-shadow: 0 0 50px rgba(0,0,0,0.8), 0 0 20px rgba(80,180,255,0.03), inset 0 8px 24px rgba(0,0,0,0.9), inset 0 -2px 6px rgba(255,255,255,0.04), inset 0 0 40px rgba(0,0,0,0.4);
+                animation: breathe-glow 4s ease-in-out infinite;
             }
             .pomodoro-home-state-label {
                 font-size: 11px;
@@ -81,13 +118,19 @@ export default class PomodoroPreferences extends ExtensionPreferences {
                 letter-spacing: 4px;
                 color: rgba(255,255,255,0.7);
             }
+            .pomodoro-home-heart {
+                font-size: 19px;
+                font-weight: 500;
+                color: rgba(255,255,255,0.96);
+                text-shadow: 0 0 8px rgba(255,255,255,0.35), 0 0 16px rgba(255,255,255,0.18), 0 0 24px rgba(80,180,255,0.1);
+            }
             .pomodoro-home-digits {
                 font-size: 52px;
                 font-weight: 200;
                 letter-spacing: 2px;
                 color: #ffffff;
                 font-family: monospace;
-                text-shadow: 0 0 10px rgba(255,255,255,0.2);
+                text-shadow: 0 0 12px rgba(255,255,255,0.25), 0 0 24px rgba(80,180,255,0.08);
             }
             .pomodoro-home-motivation {
                 font-size: 12px;
@@ -99,28 +142,46 @@ export default class PomodoroPreferences extends ExtensionPreferences {
                 min-width: 44px;
                 min-height: 44px;
                 border-radius: 22px;
-                background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.01));
-                border-top: 1px solid rgba(255,255,255,0.2);
+                background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.02));
+                border-top: 1px solid rgba(255,255,255,0.25);
                 border-bottom: 1px solid rgba(0,0,0,0.5);
+                box-shadow: inset 0 1px 6px rgba(255,255,255,0.10), 0 4px 12px rgba(0,0,0,0.5), 0 0 10px rgba(80,180,255,0.03);
+                transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
             }
             .pomodoro-home-play-btn:hover {
-                background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+                background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04));
+                box-shadow: inset 0 2px 8px rgba(255,255,255,0.20), 0 6px 16px rgba(0,0,0,0.6), 0 0 18px rgba(80,180,255,0.06);
+                transform: scale(1.06);
+            }
+            .pomodoro-home-play-btn:active {
+                box-shadow: inset 0 4px 12px rgba(0,0,0,0.7);
+                transform: scale(0.94);
             }
             .pomodoro-home-ctrl-btn {
                 min-width: 36px;
                 min-height: 36px;
                 border-radius: 18px;
-                background: rgba(255,255,255,0.04);
-                border: 1px solid rgba(255,255,255,0.08);
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.10);
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 6px rgba(80,180,255,0.02);
+                transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
             }
             .pomodoro-home-ctrl-btn:hover {
-                background: rgba(255,255,255,0.08);
+                background: rgba(255,255,255,0.10);
+                box-shadow: inset 0 1px 4px rgba(255,255,255,0.10), 0 4px 12px rgba(0,0,0,0.4), 0 0 12px rgba(80,180,255,0.04);
+                transform: scale(1.06);
+            }
+            .pomodoro-home-ctrl-btn:active {
+                box-shadow: inset 0 3px 8px rgba(0,0,0,0.6);
+                transform: scale(0.94);
             }
             .pomodoro-home-stats-card {
-                background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
-                border-top: 1px solid rgba(255,255,255,0.15);
+                background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.015));
+                border-top: 1.5px solid rgba(255,255,255,0.20);
+                border: 1px solid rgba(255,255,255,0.06);
                 border-radius: 14px;
                 padding: 12px;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 14px rgba(80,180,255,0.02);
             }
             .pomodoro-home-task-row {
                 background: transparent;
@@ -129,33 +190,46 @@ export default class PomodoroPreferences extends ExtensionPreferences {
                 border-radius: 0;
                 padding: 8px 12px;
                 margin-bottom: 4px;
+                transition: background 300ms ease-out;
+            }
+            .pomodoro-home-task-row:hover {
+                background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.03) 50%, transparent 100%);
             }
             .pomodoro-home-start-btn {
                 padding: 12px 24px;
                 border-radius: 24px;
-                background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
-                border-top: 1px solid rgba(255,255,255,0.25);
+                background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.025));
+                border-top: 1.5px solid rgba(255,255,255,0.30);
                 border-bottom: 1px solid rgba(0,0,0,0.5);
                 color: white;
                 font-weight: 400;
                 font-size: 15px;
+                box-shadow: inset 0 1px 4px rgba(255,255,255,0.10), 0 8px 24px rgba(0,0,0,0.5), 0 0 16px rgba(80,180,255,0.03);
+                transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
             }
             .pomodoro-home-start-btn:hover {
-                background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04));
+                background: linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0.05));
+                box-shadow: inset 0 2px 6px rgba(255,255,255,0.15), 0 10px 28px rgba(0,0,0,0.6), 0 0 24px rgba(80,180,255,0.05);
+                transform: scale(1.03);
+            }
+            .pomodoro-home-start-btn:active {
+                box-shadow: inset 0 4px 12px rgba(0,0,0,0.7);
+                transform: scale(0.97);
             }
             /* Analytics page */
             .pomodoro-analytics-hero {
-                background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.01));
-                border-top: 1px solid rgba(255,255,255,0.15);
+                background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.015));
+                border-top: 1.5px solid rgba(255,255,255,0.20);
                 border-radius: 16px;
                 padding: 16px;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 16px rgba(80,180,255,0.02);
             }
             .pomodoro-analytics-hero-value {
                 font-size: 32px;
                 font-weight: 200;
                 color: #ffffff;
                 font-family: monospace;
-                text-shadow: 0 0 10px rgba(255,255,255,0.2);
+                text-shadow: 0 0 12px rgba(255,255,255,0.25), 0 0 24px rgba(80,180,255,0.10);
             }
             .pomodoro-analytics-hero-label {
                 font-size: 11px;
@@ -164,18 +238,20 @@ export default class PomodoroPreferences extends ExtensionPreferences {
                 color: rgba(255,255,255,0.6);
             }
             .pomodoro-analytics-stat-card {
-                background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-                border: 1px solid rgba(255,255,255,0.04);
-                border-top: 1px solid rgba(255,255,255,0.1);
+                background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+                border: 1px solid rgba(255,255,255,0.05);
+                border-top: 1.5px solid rgba(255,255,255,0.14);
                 border-radius: 12px;
                 padding: 12px 16px;
                 min-width: 120px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.35), 0 0 12px rgba(80,180,255,0.02);
             }
             .pomodoro-analytics-stat-value {
                 font-size: 22px;
                 font-weight: 200;
-                color: rgba(255,255,255,0.9);
+                color: rgba(255,255,255,0.95);
                 font-family: monospace;
+                text-shadow: 0 0 10px rgba(255,255,255,0.2), 0 0 20px rgba(80,180,255,0.06);
             }
             .pomodoro-analytics-stat-label {
                 font-size: 10px;
@@ -184,16 +260,17 @@ export default class PomodoroPreferences extends ExtensionPreferences {
                 color: rgba(255,255,255,0.5);
             }
             .pomodoro-streak-badge {
-                background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
-                border-top: 1px solid rgba(255,255,255,0.2);
+                background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.025));
+                border-top: 1.5px solid rgba(255,255,255,0.24);
                 border-radius: 12px;
                 padding: 10px 16px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.35), 0 0 10px rgba(80,180,255,0.02);
             }
             .pomodoro-streak-value {
                 font-size: 18px;
                 font-weight: 300;
                 color: #ffffff;
-                text-shadow: 0 0 8px rgba(255,255,255,0.3);
+                text-shadow: 0 0 10px rgba(255,255,255,0.35), 0 0 20px rgba(80,180,255,0.08);
             }
             .pomodoro-streak-label {
                 font-size: 10px;
@@ -201,17 +278,19 @@ export default class PomodoroPreferences extends ExtensionPreferences {
                 color: rgba(255,255,255,0.6);
             }
             .pomodoro-task-mini-stat {
-                background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
-                border-top: 1px solid rgba(255,255,255,0.1);
+                background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015));
+                border-top: 1.5px solid rgba(255,255,255,0.14);
                 border-radius: 10px;
                 padding: 8px 14px;
                 min-width: 80px;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.3), 0 0 8px rgba(80,180,255,0.02);
             }
             .pomodoro-task-mini-value {
                 font-size: 18px;
                 font-weight: 200;
                 color: #ffffff;
                 font-family: monospace;
+                text-shadow: 0 0 8px rgba(255,255,255,0.2);
             }
             .pomodoro-task-mini-label {
                 font-size: 9px;
@@ -237,6 +316,17 @@ export default class PomodoroPreferences extends ExtensionPreferences {
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         );
 
+        // Apply theme CSS class dynamically
+        const updateThemeClass = () => {
+            if (settings.get_string('theme-name') === 'black-pink') {
+                window.add_css_class('theme-black-pink');
+            } else {
+                window.remove_css_class('theme-black-pink');
+            }
+        };
+        settings.connect('changed::theme-name', updateThemeClass);
+        updateThemeClass();
+
         // ══════════════════════════════════
         // PAGE 0: HOME — Main App Interface
         // ══════════════════════════════════
@@ -247,7 +337,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         // ══════════════════════════════════
         const timerPage = new Adw.PreferencesPage({
             title: _('Timer'),
-            icon_name: 'preferences-system-time-symbolic',
+            icon_name: 'polindora-timer-symbolic',
         });
         window.add(timerPage);
 
@@ -303,7 +393,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         // ══════════════════════════════════
         const behaviorPage = new Adw.PreferencesPage({
             title: _('Behavior'),
-            icon_name: 'preferences-other-symbolic',
+            icon_name: 'polindora-behavior-symbolic',
         });
         window.add(behaviorPage);
 
@@ -360,7 +450,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         // ══════════════════════════════════
         const appearancePage = new Adw.PreferencesPage({
             title: _('Appearance'),
-            icon_name: 'applications-graphics-symbolic',
+            icon_name: 'polindora-appearance-symbolic',
         });
         window.add(appearancePage);
 
@@ -404,9 +494,30 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         // ── Icon Customization ──
         const iconGroup = new Adw.PreferencesGroup({
             title: _('Icon Customization'),
-            description: _('Customize the top panel heart icon'),
+            description: _('Customize the top panel app icon'),
         });
         appearancePage.add(iconGroup);
+
+        const iconStyleMap = [
+            { id: 'heart-outline', label: _('Outline Heart') },
+            { id: 'heart-solid', label: _('Solid Heart') },
+            { id: 'ring', label: _('Timer Ring') },
+            { id: 'flame', label: _('Flame') },
+        ];
+        const iconStyleRow = new Adw.ComboRow({
+            title: _('Icon Shape'),
+            subtitle: _('Choose the top panel icon style'),
+            model: Gtk.StringList.new(iconStyleMap.map(x => x.label)),
+        });
+        const currentIconStyle = settings.get_string('icon-style') || 'heart-outline';
+        const styleIndex = Math.max(0, iconStyleMap.findIndex(x => x.id === currentIconStyle));
+        iconStyleRow.set_selected(styleIndex);
+        iconStyleRow.connect('notify::selected', row => {
+            const selected = row.get_selected();
+            const item = iconStyleMap[selected];
+            if (item) settings.set_string('icon-style', item.id);
+        });
+        iconGroup.add(iconStyleRow);
 
         const iconColorButtons = {};
 
@@ -510,6 +621,11 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         // PAGE 5: Tasks — Task management + mini analytics
         // ══════════════════════════════════
         this._buildTasksPage(window, settings);
+
+        // ══════════════════════════════════
+        // PAGE 6: Theme
+        // ══════════════════════════════════
+        this._buildThemePage(window, settings);
     }
 
     _addColorRow(group, settings, key, title, subtitle) {
@@ -539,6 +655,15 @@ export default class PomodoroPreferences extends ExtensionPreferences {
             settings.set_string(key, `#${r}${g}${b}`);
         });
 
+        // Listen for external settings changes
+        settings.connect(`changed::${key}`, () => {
+            const newColorStr = settings.get_string(key);
+            const newRgba = new Gdk.RGBA();
+            if (newRgba.parse(newColorStr)) {
+                colorBtn.set_rgba(newRgba);
+            }
+        });
+
         row.add_suffix(colorBtn);
         group.add(row);
 
@@ -552,7 +677,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
     _buildHomePage(window, settings) {
         const homePage = new Adw.PreferencesPage({
             title: _('Home'),
-            icon_name: 'go-home-symbolic',
+            icon_name: 'polindora-home-symbolic',
         });
         window.add(homePage);
 
@@ -631,12 +756,11 @@ export default class PomodoroPreferences extends ExtensionPreferences {
             spacing: 4,
         });
 
-        // Heart icon
-        const heartIcon = new Gtk.Image({
-            icon_name: 'emblem-favorite-symbolic',
-            pixel_size: 22,
+        // Minimal heart above state label
+        const heartIcon = new Gtk.Label({
+            label: '♥',
             halign: Gtk.Align.CENTER,
-            css_classes: ['pomodoro-home-state-label'],
+            css_classes: ['pomodoro-home-heart'],
         });
         circleContent.append(heartIcon);
 
@@ -666,7 +790,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         });
 
         const playBtn = new Gtk.Button({
-            icon_name: 'media-playback-start-symbolic',
+            icon_name: 'polindora-play-symbolic',
             css_classes: ['pomodoro-home-play-btn'],
             halign: Gtk.Align.CENTER,
             tooltip_text: _('Start / Pause'),
@@ -708,7 +832,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         });
 
         const skipBtn = new Gtk.Button({
-            icon_name: 'media-skip-forward-symbolic',
+            icon_name: 'polindora-skip-symbolic',
             css_classes: ['pomodoro-home-ctrl-btn'],
             sensitive: true,
             tooltip_text: _('Skip current session'),
@@ -716,7 +840,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         actionRow.append(skipBtn);
 
         const resetBtn = new Gtk.Button({
-            icon_name: 'edit-clear-all-symbolic',
+            icon_name: 'polindora-reset-symbolic',
             css_classes: ['pomodoro-home-ctrl-btn'],
             sensitive: true,
             tooltip_text: _('Reset timer'),
@@ -724,6 +848,14 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         actionRow.append(resetBtn);
 
         actionGroup.add(actionRow);
+
+        // ── Category normalization helper ──
+        const _normalizeCategory = (raw) => {
+            if (!raw || typeof raw !== 'string') return 'General';
+            let s = raw.trim().replace(/\s+/g, ' ');
+            if (!s) return 'General';
+            return s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+        };
 
         // ── Start Focus Session (category picker) ──
         const startGroup = new Adw.PreferencesGroup({});
@@ -733,15 +865,18 @@ export default class PomodoroPreferences extends ExtensionPreferences {
             halign: Gtk.Align.CENTER,
         });
 
-        // Build category list
+        // Build category list (normalized + deduplicated)
         const _refreshCategories = () => {
             let cats = ['General'];
             try {
                 let tasks = JSON.parse(settings.get_string('tasks'));
                 if (Array.isArray(tasks)) {
                     tasks.forEach(t => {
-                        if (!t.done && t.category && !cats.includes(t.category)) {
-                            cats.push(t.category);
+                        if (!t.done && t.category) {
+                            let norm = _normalizeCategory(t.category);
+                            if (!cats.includes(norm)) {
+                                cats.push(norm);
+                            }
                         }
                     });
                 }
@@ -752,7 +887,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
 
         const startFocusBtn = new Gtk.Button({
             label: _('Start Focus Session'),
-            icon_name: 'pomodoro-symbolic',
+            icon_name: 'polindora-rocket-symbolic',
             css_classes: ['pomodoro-home-start-btn'],
             halign: Gtk.Align.FILL,
             hexpand: true,
@@ -796,14 +931,10 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         const focusStr = hrs > 0 ? `${hrs}h ${mns}m` : `${mns}m`;
 
         const statsRow = new Adw.ActionRow({
-            icon_name: 'chart-symbolic',
+            icon_name: 'polindora-pomodoro-symbolic',
             title: `${sessionsCompleted} pomodoro${sessionsCompleted !== 1 ? 's' : ''}`,
             subtitle: `${focusStr} focused`,
         });
-        statsRow.add_prefix(new Gtk.Image({
-            icon_name: 'utilities-system-monitor-symbolic',
-            pixel_size: 18,
-        }));
         statsGroup.add(statsRow);
 
         // ── Top 3 Tasks ──
@@ -824,6 +955,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
             let topTasks = tasks.filter(t => !t.done).slice(0, 3);
             if (topTasks.length === 0) {
                 let emptyRow = new Adw.ActionRow({
+                    icon_name: 'polindora-inbox-symbolic',
                     title: _('No active tasks'),
                     subtitle: _('Add tasks from the Tasks tab'),
                 });
@@ -833,11 +965,12 @@ export default class PomodoroPreferences extends ExtensionPreferences {
             }
             topTasks.forEach((t, i) => {
                 let row = new Adw.ActionRow({
+                    icon_name: 'polindora-bullet-symbolic',
                     title: t.text || '(unnamed)',
                     subtitle: t.category || 'General',
                 });
                 let doneBtn = new Gtk.Button({
-                    icon_name: 'object-select-symbolic',
+                    icon_name: 'polindora-complete-symbolic',
                     valign: Gtk.Align.CENTER,
                     tooltip_text: _('Mark done'),
                     css_classes: ['flat'],
@@ -927,11 +1060,13 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         const _updateHomeUI = () => {
             let sessions = settings.get_int('sessions-completed');
             let isStrict = settings.get_boolean('strict-mode');
+            // Bug 1: Hide category picker during active session
+            categoryCombo.set_visible(_homeState === 'idle');
             if (_homeState === 'idle') {
                 stateLabel.set_label('FOCUS');
                 let wd = settings.get_int('work-duration');
                 digitsLabel.set_label(_formatTime(wd * 60));
-                playBtn.set_icon_name('media-playback-start-symbolic');
+                playBtn.set_icon_name('polindora-play-symbolic');
                 playBtn.set_sensitive(true);
                 skipBtn.set_sensitive(true);
                 resetBtn.set_sensitive(true);
@@ -942,7 +1077,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
                 let rem = Math.max(0, _homeDuration - _homeElapsed);
                 stateLabel.set_label('FOCUS');
                 digitsLabel.set_label(_formatTime(rem));
-                playBtn.set_icon_name(_homePaused ? 'media-playback-start-symbolic' : 'media-playback-pause-symbolic');
+                playBtn.set_icon_name(_homePaused ? 'polindora-play-symbolic' : 'polindora-pause-symbolic');
                 playBtn.set_sensitive(!isStrict);
                 skipBtn.set_sensitive(!isStrict);
                 resetBtn.set_sensitive(true);
@@ -956,7 +1091,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
                 let rem = Math.max(0, _homeDuration - _homeElapsed);
                 stateLabel.set_label(_homeState === 'long_break' ? 'LONG BREAK' : 'BREAK');
                 digitsLabel.set_label(_formatTime(rem));
-                playBtn.set_icon_name(_homePaused ? 'media-playback-start-symbolic' : 'media-playback-pause-symbolic');
+                playBtn.set_icon_name(_homePaused ? 'polindora-play-symbolic' : 'polindora-pause-symbolic');
                 playBtn.set_sensitive(true);
                 skipBtn.set_sensitive(true);
                 resetBtn.set_sensitive(true);
@@ -1044,7 +1179,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
             if (_homeState === 'idle') {
                 let selected = categoryCombo.get_selected();
                 let model = categoryCombo.get_model();
-                let cat = model ? model.get_string(selected) || 'General' : 'General';
+                let cat = _normalizeCategory(model ? model.get_string(selected) : 'General');
                 settings.set_string('timer-category', cat);
                 settings.set_string('timer-command', 'start-work');
             } else {
@@ -1056,7 +1191,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
             if (_homeState === 'idle') {
                 let selected = categoryCombo.get_selected();
                 let model = categoryCombo.get_model();
-                let cat = model ? model.get_string(selected) || 'General' : 'General';
+                let cat = _normalizeCategory(model ? model.get_string(selected) : 'General');
                 settings.set_string('timer-category', cat);
                 settings.set_string('timer-command', 'start-work');
             }
@@ -1107,7 +1242,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
     _buildAnalyticsPage(window, settings) {
         const page = new Adw.PreferencesPage({
             title: _('Analytics'),
-            icon_name: 'utilities-system-monitor-symbolic',
+            icon_name: 'polindora-analytics-symbolic',
         });
         window.add(page);
 
@@ -1150,7 +1285,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         let focusMins = settings.get_int('total-focus-minutes');
 
         const heroSessionsRow = new Adw.ActionRow({
-            icon_name: 'pomodoro-symbolic',
+            icon_name: 'polindora-pomodoro-symbolic',
             title: _('Pomodoros Completed'),
             subtitle: `${sessions} session${sessions !== 1 ? 's' : ''} today`,
         });
@@ -1162,7 +1297,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         heroGroup.add(heroSessionsRow);
 
         const heroFocusRow = new Adw.ActionRow({
-            icon_name: 'preferences-system-time-symbolic',
+            icon_name: 'polindora-hourglass-symbolic',
             title: _('Total Focus Time'),
             subtitle: `${_fmtTime(focusMins)} of deep work`,
         });
@@ -1176,6 +1311,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         // Average session length
         let avgMins = sessions > 0 ? Math.round(focusMins / sessions) : 0;
         const avgRow = new Adw.ActionRow({
+            icon_name: 'polindora-avg-symbolic',
             title: _('Avg Session Length'),
             subtitle: `${avgMins}m per pomodoro`,
         });
@@ -1183,7 +1319,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
 
         let allTimeMins = settings.get_int('all-time-focus-minutes');
         const allTimeRow = new Adw.ActionRow({
-            icon_name: 'emblem-favorite-symbolic',
+            icon_name: 'polindora-star-symbolic',
             title: _('Total Focus Time (All Time)'),
             subtitle: `${_fmtTime(allTimeMins)} of deep work in total`,
         });
@@ -1216,7 +1352,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         page.add(streakGroup);
 
         const streakRow = new Adw.ActionRow({
-            icon_name: 'flame-symbolic',
+            icon_name: 'polindora-streak-symbolic',
             title: _('Current Streak'),
             subtitle: `0 days consecutive`,
         });
@@ -1228,6 +1364,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         streakGroup.add(streakRow);
 
         const bestRow = new Adw.ActionRow({
+            icon_name: 'polindora-trophy-symbolic',
             title: _('Best Streak'),
             subtitle: `Your all-time record`,
         });
@@ -1280,7 +1417,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
 
         // ── 3. Category Breakdown (pie chart + legend) ──
         const catGroup = new Adw.PreferencesGroup({
-            title: _(' Category Breakdown'),
+            title: _('Category Breakdown'),
             description: _('Time spent per category today'),
         });
         page.add(catGroup);
@@ -1288,41 +1425,136 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         const CHART_COLORS = [
             [0.0, 0.83, 1.0], [0.0, 1.0, 0.4], [1.0, 0.18, 0.47],
             [1.0, 0.8, 0.0], [0.6, 0.2, 1.0], [1.0, 0.5, 0.0],
+            [0.3, 0.9, 0.7], [0.9, 0.4, 0.8], [0.4, 0.6, 1.0],
         ];
 
+        // State for Bug 4: bar-click-to-pie interaction
+        let _selectedDayIndex = -1; // -1 = today (live data)
+        let _overrideCatStats = null; // null = use live task-stats
+        let _hoveredSliceIndex = -1; // for hover tooltip
+
+        // Get effective category stats (overridden by bar click or live)
+        const _getEffectiveCatStats = () => {
+            if (_overrideCatStats) return _overrideCatStats;
+            return _readTaskStats();
+        };
+
         const pieChart = new Gtk.DrawingArea({
-            width_request: 160, height_request: 160,
+            width_request: 180, height_request: 180,
             halign: Gtk.Align.CENTER, margin_bottom: 8,
         });
-        pieChart.set_draw_func((area, cr, w, h) => {
-            let tStats = _readTaskStats();
+
+        // Hover tooltip via motion controller
+        const motionCtrl = new Gtk.EventControllerMotion();
+        motionCtrl.connect('motion', (ctrl, mx, my) => {
+            let tStats = _getEffectiveCatStats();
+            let keys = Object.keys(tStats).filter(k => tStats[k] > 0);
             let total = 0;
-            for (let c in tStats) total += tStats[c];
-            let cx = w / 2, cy = h / 2, r = Math.min(cx, cy) - 8;
+            for (let k of keys) total += tStats[k];
+            if (total === 0 || keys.length === 0) {
+                if (_hoveredSliceIndex !== -1) {
+                    _hoveredSliceIndex = -1;
+                    pieChart.set_tooltip_text(null);
+                    pieChart.queue_draw();
+                }
+                return;
+            }
+            let w = pieChart.get_width();
+            let h = pieChart.get_height();
+            let cx = w / 2, cy = h / 2;
+            let r = Math.min(cx, cy) - 8;
+            let innerR = r * 0.55;
+            let dx = mx - cx, dy = my - cy;
+            let dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < innerR || dist > r + 6) {
+                if (_hoveredSliceIndex !== -1) {
+                    _hoveredSliceIndex = -1;
+                    pieChart.set_tooltip_text(null);
+                    pieChart.queue_draw();
+                }
+                return;
+            }
+            let mouseAngle = Math.atan2(dy, dx);
+            if (mouseAngle < -Math.PI / 2) mouseAngle += 2 * Math.PI;
+            let angle = -Math.PI / 2;
+            let found = -1;
+            for (let i = 0; i < keys.length; i++) {
+                let sweep = (tStats[keys[i]] / total) * 2 * Math.PI;
+                let endAngle = angle + sweep;
+                let normMouse = mouseAngle;
+                if (normMouse >= angle && normMouse < endAngle) { found = i; break; }
+                angle = endAngle;
+            }
+            if (found !== _hoveredSliceIndex) {
+                _hoveredSliceIndex = found;
+                if (found >= 0) {
+                    let cat = keys[found];
+                    let mins = tStats[cat];
+                    let pct = Math.round((mins / total) * 100);
+                    pieChart.set_tooltip_text(`${cat}: ${_fmtTime(mins)} (${pct}%)`);
+                } else {
+                    pieChart.set_tooltip_text(null);
+                }
+                pieChart.queue_draw();
+            }
+        });
+        motionCtrl.connect('leave', () => {
+            if (_hoveredSliceIndex !== -1) {
+                _hoveredSliceIndex = -1;
+                pieChart.set_tooltip_text(null);
+                pieChart.queue_draw();
+            }
+        });
+        pieChart.add_controller(motionCtrl);
+
+        pieChart.set_draw_func((area, cr, w, h) => {
+            let tStats = _getEffectiveCatStats();
+            let keys = Object.keys(tStats).filter(k => tStats[k] > 0);
+            let total = 0;
+            for (let k of keys) total += tStats[k];
+            let cx = w / 2, cy = h / 2, r = Math.min(cx, cy) - 12;
             if (r <= 0) return;
-            // Draw donut
             let innerR = r * 0.55;
             if (total === 0) {
                 cr.setSourceRGBA(0.5, 0.5, 0.5, 0.15);
                 cr.arc(cx, cy, r, 0, 2 * Math.PI);
                 cr.arc(cx, cy, innerR, 0, 2 * Math.PI);
-                cr.setFillRule(1); // EVEN_ODD
+                cr.setFillRule(1);
                 cr.fill();
                 return;
             }
-            let angle = -Math.PI / 2, i = 0;
-            for (let c in tStats) {
-                let sweep = (tStats[c] / total) * 2 * Math.PI;
-                if (sweep <= 0) { i++; continue; }
-                cr.moveTo(cx + innerR * Math.cos(angle), cy + innerR * Math.sin(angle));
-                cr.arc(cx, cy, r, angle, angle + sweep);
-                cr.arc(cx, cy, innerR, angle + sweep, angle);
+            let angle = -Math.PI / 2;
+            for (let i = 0; i < keys.length; i++) {
+                let sweep = (tStats[keys[i]] / total) * 2 * Math.PI;
+                if (sweep <= 0) continue;
+                let isHovered = (i === _hoveredSliceIndex);
+                let explode = isHovered ? 6 : 0;
+                let midAngle = angle + sweep / 2;
+                let offX = explode * Math.cos(midAngle);
+                let offY = explode * Math.sin(midAngle);
+                let sCx = cx + offX, sCy = cy + offY;
+                cr.moveTo(sCx + innerR * Math.cos(angle), sCy + innerR * Math.sin(angle));
+                cr.arc(sCx, sCy, isHovered ? r + 3 : r, angle, angle + sweep);
+                cr.arc(sCx, sCy, innerR, angle + sweep, angle);
                 cr.closePath();
                 let col = CHART_COLORS[i % CHART_COLORS.length];
-                cr.setSourceRGBA(col[0], col[1], col[2], 0.85);
+                cr.setSourceRGBA(col[0], col[1], col[2], isHovered ? 1.0 : 0.8);
                 cr.fillPreserve();
                 cr.setSourceRGBA(0, 0, 0, 0.3); cr.setLineWidth(1); cr.stroke();
-                angle += sweep; i++;
+                // Draw category label on slice for larger slices
+                if (sweep > 0.4) {
+                    let labelR = (r + innerR) / 2;
+                    let lx = cx + labelR * Math.cos(midAngle);
+                    let ly = cy + labelR * Math.sin(midAngle);
+                    cr.setSourceRGBA(1, 1, 1, 0.9);
+                    cr.selectFontFace('sans-serif', 0, 1);
+                    cr.setFontSize(9);
+                    let pct = `${Math.round((tStats[keys[i]] / total) * 100)}%`;
+                    let te = cr.textExtents(pct);
+                    cr.moveTo(lx - te.width / 2, ly + te.height / 2);
+                    cr.showText(pct);
+                }
+                angle += sweep;
             }
             // Center text
             cr.setSourceRGBA(1, 1, 1, 0.8);
@@ -1335,50 +1567,57 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         });
         catGroup.add(pieChart);
 
-        // Legend rows
-        let taskStats = _readTaskStats();
-        let catTotal = 0;
-        for (let c in taskStats) catTotal += taskStats[c];
-        let ci = 0;
-        for (let cat in taskStats) {
-            let mins = taskStats[cat];
-            let pct = catTotal > 0 ? Math.round((mins / catTotal) * 100) : 0;
-            let col = CHART_COLORS[ci % CHART_COLORS.length];
-            let hexCol = `rgb(${Math.round(col[0] * 255)},${Math.round(col[1] * 255)},${Math.round(col[2] * 255)})`;
-            let catRow = new Adw.ActionRow({
-                title: cat,
-                subtitle: `${_fmtTime(mins)} · ${pct}%`,
+        // Dynamic legend rows
+        let _legendRows = [];
+        const _refreshCategoryBreakdown = () => {
+            for (const r of _legendRows) catGroup.remove(r);
+            _legendRows = [];
+            let tStats = _getEffectiveCatStats();
+            let keys = Object.keys(tStats).filter(k => tStats[k] > 0);
+            let total = 0;
+            for (let k of keys) total += tStats[k];
+            if (keys.length === 0) {
+                let emptyRow = new Adw.ActionRow({
+                    title: _('No data yet'),
+                    subtitle: _('Complete a focus session to see category breakdown'),
+                });
+                catGroup.add(emptyRow);
+                _legendRows.push(emptyRow);
+                pieChart.queue_draw();
+                return;
+            }
+            keys.forEach((cat, ci) => {
+                let mins = tStats[cat];
+                let pct = total > 0 ? Math.round((mins / total) * 100) : 0;
+                let col = CHART_COLORS[ci % CHART_COLORS.length];
+                let catRow = new Adw.ActionRow({
+                    title: cat,
+                    subtitle: `${_fmtTime(mins)} · ${pct}%`,
+                });
+                let dot = new Gtk.DrawingArea({ width_request: 12, height_request: 12, valign: Gtk.Align.CENTER });
+                const cc = col;
+                dot.set_draw_func((a, cr2, w2, h2) => {
+                    cr2.setSourceRGBA(cc[0], cc[1], cc[2], 1);
+                    cr2.arc(w2 / 2, h2 / 2, 5, 0, 2 * Math.PI);
+                    cr2.fill();
+                });
+                catRow.add_prefix(dot);
+                catGroup.add(catRow);
+                _legendRows.push(catRow);
             });
-            let dot = new Gtk.DrawingArea({ width_request: 12, height_request: 12, valign: Gtk.Align.CENTER });
-            const capturedCol = col;
-            dot.set_draw_func((a, cr2, w2, h2) => {
-                cr2.setSourceRGBA(capturedCol[0], capturedCol[1], capturedCol[2], 1);
-                cr2.arc(w2 / 2, h2 / 2, 5, 0, 2 * Math.PI);
-                cr2.fill();
-            });
-            catRow.add_prefix(dot);
-            catGroup.add(catRow);
-            ci++;
-        }
-        if (ci === 0) {
-            catGroup.add(new Adw.ActionRow({
-                title: _('No data yet'),
-                subtitle: _('Complete a focus session to see category breakdown'),
-            }));
-        }
+            pieChart.queue_draw();
+        };
+        _refreshCategoryBreakdown();
 
         // ── 4. 7-Day History Bar Chart ──
         const weekGroup = new Adw.PreferencesGroup({
-            title: _(' Last 7 Days'),
-            description: _('Daily focus minutes'),
+            title: _('Last 7 Days'),
+            description: _('Daily focus minutes · Click a bar to see its category breakdown'),
         });
         page.add(weekGroup);
 
-        const barChart = new Gtk.DrawingArea({
-            width_request: 380, height_request: 140,
-            halign: Gtk.Align.CENTER, margin_top: 4, margin_bottom: 4,
-        });
-        barChart.set_draw_func((area, cr, w, h) => {
+        // Helper: build days array from history
+        const _buildDays = () => {
             let hist = _readHistory();
             let dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             let days = [];
@@ -1388,11 +1627,59 @@ export default class PomodoroPreferences extends ExtensionPreferences {
                 let ds = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
                 let entry = hist.find(e => e.date === ds);
                 let mins = entry ? entry.focusMinutes : 0;
-                if (i === 0) mins = settings.get_int('total-focus-minutes');
-                days.push({ label: dayNames[d.getDay()], mins, isToday: i === 0 });
+                let categories = entry ? (entry.categories || {}) : {};
+                if (i === 0) {
+                    mins = settings.get_int('total-focus-minutes');
+                    categories = _readTaskStats();
+                }
+                let dateLabel = `${d.getDate()}/${d.getMonth() + 1}`;
+                days.push({ label: dayNames[d.getDay()], dateLabel, mins, isToday: i === 0, categories, date: ds });
             }
+            return days;
+        };
+
+        const barChart = new Gtk.DrawingArea({
+            width_request: 380, height_request: 150,
+            halign: Gtk.Align.CENTER, margin_top: 4, margin_bottom: 4,
+        });
+
+        // Click handler for bar chart
+        const clickCtrl = new Gtk.GestureClick();
+        clickCtrl.connect('pressed', (gesture, nPress, mx, my) => {
+            let days = _buildDays();
+            let w = barChart.get_width();
+            let barW = 36, gap = 12;
+            let chartW = days.length * (barW + gap) - gap;
+            let startX = (w - chartW) / 2;
+            // Determine which bar was clicked
+            let clickedIndex = -1;
+            for (let i = 0; i < days.length; i++) {
+                let x = startX + i * (barW + gap);
+                if (mx >= x && mx <= x + barW) { clickedIndex = i; break; }
+            }
+            if (clickedIndex < 0) return;
+            // Toggle selection: click same bar deselects
+            if (_selectedDayIndex === clickedIndex) {
+                _selectedDayIndex = -1;
+                _overrideCatStats = null;
+                catGroup.set_title(_('Category Breakdown'));
+                catGroup.set_description(_('Time spent per category today'));
+            } else {
+                _selectedDayIndex = clickedIndex;
+                let day = days[clickedIndex];
+                _overrideCatStats = day.categories || {};
+                catGroup.set_title(_(`Category Breakdown — ${day.label} ${day.dateLabel}`));
+                catGroup.set_description(day.isToday ? _('Today\'s categories') : _(`Focus categories for ${day.label}`));
+            }
+            barChart.queue_draw();
+            _refreshCategoryBreakdown();
+        });
+        barChart.add_controller(clickCtrl);
+
+        barChart.set_draw_func((area, cr, w, h) => {
+            let days = _buildDays();
             let maxVal = Math.max(1, ...days.map(d => d.mins));
-            let barW = 36, gap = 12, leftPad = 30;
+            let barW = 36, gap = 12;
             let chartW = days.length * (barW + gap) - gap;
             let startX = (w - chartW) / 2;
             let chartH = h - 30;
@@ -1414,8 +1701,15 @@ export default class PomodoroPreferences extends ExtensionPreferences {
                 let x = startX + i * (barW + gap);
                 let barH = d.mins > 0 ? Math.max(3, (d.mins / maxVal) * (chartH - 10)) : 0;
                 let y = 10 + (chartH - 10) - barH;
-                if (d.isToday) cr.setSourceRGBA(1, 0.18, 0.47, 0.8);
-                else cr.setSourceRGBA(0, 0.83, 1.0, 0.5);
+                let isSelected = (i === _selectedDayIndex);
+                // Color: selected = bright glow, today = pink, others = cyan
+                if (isSelected) {
+                    cr.setSourceRGBA(1, 0.8, 0.0, 0.95);
+                } else if (d.isToday) {
+                    cr.setSourceRGBA(1, 0.18, 0.47, 0.8);
+                } else {
+                    cr.setSourceRGBA(0, 0.83, 1.0, 0.5);
+                }
                 // Rounded rect
                 let rr = 4;
                 cr.moveTo(x + rr, y);
@@ -1427,8 +1721,30 @@ export default class PomodoroPreferences extends ExtensionPreferences {
                 cr.arc(x + rr, y + rr, rr, Math.PI, 3 * Math.PI / 2);
                 cr.closePath();
                 cr.fill();
+                // Selected glow effect
+                if (isSelected && barH > 0) {
+                    cr.save();
+                    cr.moveTo(x + rr, y);
+                    cr.lineTo(x + barW - rr, y);
+                    cr.arc(x + barW - rr, y + rr, rr, -Math.PI / 2, 0);
+                    cr.lineTo(x + barW, 10 + chartH - 10);
+                    cr.lineTo(x, 10 + chartH - 10);
+                    cr.lineTo(x, y + rr);
+                    cr.arc(x + rr, y + rr, rr, Math.PI, 3 * Math.PI / 2);
+                    cr.closePath();
+                    cr.setSourceRGBA(1, 0.8, 0.0, 0.15);
+                    cr.setLineWidth(3);
+                    cr.stroke();
+                    cr.restore();
+                    // Selection indicator triangle
+                    cr.setSourceRGBA(1, 0.8, 0.0, 0.9);
+                    let tx = x + barW / 2;
+                    let ty = h - 16;
+                    cr.moveTo(tx - 4, ty + 5); cr.lineTo(tx + 4, ty + 5); cr.lineTo(tx, ty);
+                    cr.closePath(); cr.fill();
+                }
                 // Label
-                cr.setSourceRGBA(1, 1, 1, d.isToday ? 0.8 : 0.4);
+                cr.setSourceRGBA(1, 1, 1, (d.isToday || isSelected) ? 0.8 : 0.4);
                 cr.selectFontFace('monospace', 0, 0); cr.setFontSize(9);
                 let ext = cr.textExtents(d.label);
                 cr.moveTo(x + barW / 2 - ext.width / 2, h - 5);
@@ -1459,21 +1775,25 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         let compRate = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
         const totalTasksRow = new Adw.ActionRow({
+            icon_name: 'polindora-list-symbolic',
             title: _('Total Tasks'), subtitle: `${totalTasks} created`,
         });
         taskStatGroup.add(totalTasksRow);
 
         const doneTasksRow = new Adw.ActionRow({
+            icon_name: 'polindora-complete-symbolic',
             title: _('Completed'), subtitle: `${doneTasks} finished`,
         });
         taskStatGroup.add(doneTasksRow);
 
         const activeTasksRow = new Adw.ActionRow({
+            icon_name: 'polindora-pending-symbolic',
             title: _('Active'), subtitle: `${activeTasks} remaining`,
         });
         taskStatGroup.add(activeTasksRow);
 
         const rateRow = new Adw.ActionRow({
+            icon_name: 'polindora-percent-symbolic',
             title: _('Completion Rate'),
         });
         const rateLabel = new Gtk.Label({
@@ -1502,6 +1822,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         page.add(resetGroup);
 
         const resetRow = new Adw.ActionRow({
+            icon_name: 'polindora-reset-symbolic',
             title: _('Reset Today\'s Stats'),
             subtitle: _('Clear session count and focus time for today'),
         });
@@ -1527,6 +1848,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         resetGroup.add(resetRow);
 
         const resetAllRow = new Adw.ActionRow({
+            icon_name: 'polindora-delete-symbolic',
             title: _('Reset All History'),
             subtitle: _('Clear all analytics data and streaks'),
         });
@@ -1557,7 +1879,9 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         resetGroup.add(resetAllRow);
 
         // Redraw charts on stats change
-        const sid1 = settings.connect('changed::task-stats', () => pieChart.queue_draw());
+        const sid1 = settings.connect('changed::task-stats', () => {
+            _refreshCategoryBreakdown();
+        });
         const sid2 = settings.connect('changed::sessions-completed', () => {
             barChart.queue_draw();
             _refreshHeroStats();
@@ -1566,7 +1890,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         const sid3 = settings.connect('changed::tasks', () => _refreshTaskStats());
         const sid4 = settings.connect('changed::total-focus-minutes', () => _refreshHeroStats());
         const sid5 = settings.connect('changed::analytics-history', () => _refreshStreakStats());
-        
+
         window.connect('close-request', () => {
             settings.disconnect(sid1);
             settings.disconnect(sid2);
@@ -1584,7 +1908,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
     _buildTasksPage(window, settings) {
         const page = new Adw.PreferencesPage({
             title: _('Tasks'),
-            icon_name: 'view-list-symbolic',
+            icon_name: 'polindora-tasks-symbolic',
         });
         window.add(page);
 
@@ -1607,22 +1931,22 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         let active = total - done;
         let rate = total > 0 ? Math.round((done / total) * 100) : 0;
 
-        const summaryTotalRow = new Adw.ActionRow({ title: _('Total Tasks'), icon_name: 'task-symbolic' });
+        const summaryTotalRow = new Adw.ActionRow({ title: _('Total Tasks'), icon_name: 'polindora-list-symbolic' });
         const summaryTotalLabel = new Gtk.Label({ label: `${total}`, css_classes: ['title-2'] });
         summaryTotalRow.add_suffix(summaryTotalLabel);
         miniGroup.add(summaryTotalRow);
 
-        const summaryDoneRow = new Adw.ActionRow({ title: _('Completed'), icon_name: 'check-symbolic' });
+        const summaryDoneRow = new Adw.ActionRow({ title: _('Completed'), icon_name: 'polindora-complete-symbolic' });
         const summaryDoneLabel = new Gtk.Label({ label: `${done}`, css_classes: ['title-2'] });
         summaryDoneRow.add_suffix(summaryDoneLabel);
         miniGroup.add(summaryDoneRow);
 
-        const summaryActiveRow = new Adw.ActionRow({ title: _('Remaining') });
+        const summaryActiveRow = new Adw.ActionRow({ title: _('Remaining'), icon_name: 'polindora-pending-symbolic' });
         const summaryActiveLabel = new Gtk.Label({ label: `${active}`, css_classes: ['title-2'] });
         summaryActiveRow.add_suffix(summaryActiveLabel);
         miniGroup.add(summaryActiveRow);
 
-        const summaryRateRow = new Adw.ActionRow({ title: _('Completion Rate') });
+        const summaryRateRow = new Adw.ActionRow({ title: _('Completion Rate'), icon_name: 'polindora-percent-symbolic' });
         const summaryRateLabel = new Gtk.Label({ label: `${rate}%`, css_classes: ['title-2'] });
         summaryRateRow.add_suffix(summaryRateLabel);
         miniGroup.add(summaryRateRow);
@@ -1692,12 +2016,13 @@ export default class PomodoroPreferences extends ExtensionPreferences {
                 activeTasks.forEach(t => {
                     let pomInfo = t.pomodorosSpent ? ` · ${t.pomodorosSpent} Pomo` : '';
                     let row = new Adw.ActionRow({
+                        icon_name: 'polindora-bullet-symbolic',
                         title: t.text || '(unnamed)',
                         subtitle: `${t.category || 'General'}${pomInfo}`,
                     });
                     // Mark done button
                     let doneBtn = new Gtk.Button({
-                        icon_name: 'object-select-symbolic',
+                        icon_name: 'polindora-complete-symbolic',
                         valign: Gtk.Align.CENTER,
                         tooltip_text: _('Mark as done'),
                         css_classes: ['suggested-action'],
@@ -1716,7 +2041,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
                     row.add_suffix(doneBtn);
                     // Delete button
                     let delBtn = new Gtk.Button({
-                        icon_name: 'user-trash-symbolic',
+                        icon_name: 'polindora-delete-symbolic',
                         valign: Gtk.Align.CENTER,
                         css_classes: ['destructive-action'],
                     });
@@ -1738,6 +2063,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
             let completedTasks = allTasks.filter(t => t.done);
             if (completedTasks.length === 0) {
                 let emptyRow = new Adw.ActionRow({
+                    icon_name: 'polindora-complete-symbolic',
                     title: _('No completed tasks yet'),
                     subtitle: _('Finish tasks to see them here'),
                 });
@@ -1754,12 +2080,13 @@ export default class PomodoroPreferences extends ExtensionPreferences {
                     }
                     let pomInfo = t.pomodorosSpent ? ` · ${t.pomodorosSpent} Pomo` : '';
                     let row = new Adw.ActionRow({
+                        icon_name: 'polindora-complete-symbolic',
                         title: `${t.text || '(unnamed)'}`,
                         subtitle: `${t.category || 'General'}${pomInfo}${dateStr}`,
                     });
                     // Undo button
                     let undoBtn = new Gtk.Button({
-                        icon_name: 'edit-undo-symbolic',
+                        icon_name: 'polindora-undo-symbolic',
                         valign: Gtk.Align.CENTER,
                         tooltip_text: _('Send back to active tasks'),
                         css_classes: ['flat'],
@@ -1779,7 +2106,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
 
                     // Delete button
                     let delBtn = new Gtk.Button({
-                        icon_name: 'user-trash-symbolic',
+                        icon_name: 'polindora-delete-symbolic',
                         valign: Gtk.Align.CENTER,
                         css_classes: ['destructive-action', 'flat'],
                     });
@@ -1801,7 +2128,9 @@ export default class PomodoroPreferences extends ExtensionPreferences {
 
         addBtn.connect('clicked', () => {
             let name = taskNameRow.get_text().trim();
-            let cat = taskCatRow.get_text().trim() || 'General';
+            let rawCat = taskCatRow.get_text().trim() || 'General';
+            // Bug 2: Normalize category — Title Case, collapse whitespace
+            let cat = rawCat.replace(/\s+/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
             if (name) {
                 let cur = _readTasks();
                 cur.push({
@@ -1825,5 +2154,57 @@ export default class PomodoroPreferences extends ExtensionPreferences {
             settings.disconnect(taskSid);
             return false;
         });
+    }
+
+    _buildThemePage(window, settings) {
+        const themePage = new Adw.PreferencesPage({
+            title: _('Theme'),
+            icon_name: 'polindora-appearance-symbolic',
+        });
+        window.add(themePage);
+
+        const themeGroup = new Adw.PreferencesGroup({
+            title: _('App Theme'),
+            description: _('Select the visual style for the entire application'),
+        });
+        themePage.add(themeGroup);
+
+        const themeMap = [
+            { id: 'default', label: _('Default Glassmorphism') },
+            { id: 'black-pink', label: _('Black & Pink Glassmorphism') },
+        ];
+
+        const themeRow = new Adw.ComboRow({
+            title: _('Theme'),
+            subtitle: _('Choose the color palette and background style'),
+            model: Gtk.StringList.new(themeMap.map(x => x.label)),
+        });
+
+        const currentTheme = settings.get_string('theme-name') || 'default';
+        const themeIndex = Math.max(0, themeMap.findIndex(x => x.id === currentTheme));
+        themeRow.set_selected(themeIndex);
+
+        themeRow.connect('notify::selected', row => {
+            const selected = row.get_selected();
+            const item = themeMap[selected];
+            if (item) {
+                settings.set_string('theme-name', item.id);
+                // Auto switch colors
+                if (item.id === 'black-pink') {
+                    settings.set_string('work-bar-color', '#ff69b4');
+                    settings.set_string('break-bar-color', '#ff1493');
+                    settings.set_string('idle-bar-color', '#ffb6c1');
+                    settings.set_string('heart-color', '#4a0024');
+                    settings.set_string('heart-outline-color', '#ff1493');
+                } else {
+                    settings.set_string('work-bar-color', '#a3d5ff');
+                    settings.set_string('break-bar-color', '#eaf2ff');
+                    settings.set_string('idle-bar-color', '#ffffff');
+                    settings.set_string('heart-color', '#999999');
+                    settings.set_string('heart-outline-color', '#ff0000');
+                }
+            }
+        });
+        themeGroup.add(themeRow);
     }
 }

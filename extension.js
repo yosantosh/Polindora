@@ -85,99 +85,7 @@ function clampInt(value, min, max, fallback) {
     return Math.max(min, Math.min(max, Math.floor(value)));
 }
 
-// ─── Custom Heart Progress Icon ───
-// Empty outline heart that fills with color as timer progresses
-const HeartProgressIcon = GObject.registerClass(
-    class HeartProgressIcon extends St.DrawingArea {
-        _init() {
-            super._init({
-                style_class: 'pomodoro-indicator-icon system-status-icon',
-                width: 18,
-                height: 18,
-                y_align: Clutter.ActorAlign.CENTER,
-            });
-            this._progress = 0.0;
-            this._heartColor = '#999999';   // Base outline (grey)
-            this._outlineColor = '#ff0000'; // Progress fill (red)
-            this.connect('repaint', this._onRepaint.bind(this));
-        }
 
-        setProgress(fraction) {
-            let p = Math.max(0, Math.min(1, fraction));
-            if (this._progress !== p) {
-                this._progress = p;
-                this.queue_repaint();
-            }
-        }
-
-        setColors(heart, outline) {
-            this._heartColor = heart;
-            this._outlineColor = outline;
-            this.queue_repaint();
-        }
-
-        _hexToRGBA(hex) {
-            if (!hex) return [0.6, 0.6, 0.6, 1];
-            hex = hex.replace('#', '');
-            if (hex.length === 3) {
-                hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-            }
-            if (hex.length !== 6) return [0.6, 0.6, 0.6, 1];
-            return [
-                parseInt(hex.slice(0, 2), 16) / 255,
-                parseInt(hex.slice(2, 4), 16) / 255,
-                parseInt(hex.slice(4, 6), 16) / 255,
-                1.0
-            ];
-        }
-
-        _drawHeartPath(cr, cx, cy, size) {
-            const w = size;
-            const h = size * 0.9;
-            cr.moveTo(cx, cy - h * 0.2);
-            cr.curveTo(cx + w * 0.1, cy - h * 0.6, cx + w * 0.5, cy - h * 0.6, cx + w * 0.5, cy - h * 0.1);
-            cr.curveTo(cx + w * 0.5, cy + h * 0.3, cx + w * 0.2, cy + h * 0.6, cx, cy + h * 0.9);
-            cr.curveTo(cx - w * 0.2, cy + h * 0.6, cx - w * 0.5, cy + h * 0.3, cx - w * 0.5, cy - h * 0.1);
-            cr.curveTo(cx - w * 0.5, cy - h * 0.6, cx - w * 0.1, cy - h * 0.6, cx, cy - h * 0.2);
-            cr.closePath();
-        }
-
-        _onRepaint(area) {
-            const cr = area.get_context();
-            const [width, height] = area.get_surface_size();
-            const cx = width / 2;
-            const cy = height / 2;
-            const size = Math.min(width, height) * 0.8;
-            const strokeWidth = 2.0;
-
-            // 1. Draw the base outline heart (grey — always fully visible)
-            const [hr, hg, hb, ha] = this._hexToRGBA(this._heartColor);
-            cr.setSourceRGBA(hr, hg, hb, ha);
-            this._drawHeartPath(cr, cx, cy, size);
-            cr.setLineWidth(strokeWidth);
-            cr.setLineJoin(Cairo.LineJoin.ROUND);
-            cr.stroke();
-
-            // 2. Draw progress fill (red — clips from bottom upward)
-            if (this._progress > 0) {
-                cr.save();
-                const clipH = height * this._progress;
-                cr.rectangle(0, height - clipH, width, clipH);
-                cr.clip();
-
-                const [or, og, ob, oa] = this._hexToRGBA(this._outlineColor);
-                cr.setSourceRGBA(or, og, ob, oa);
-                this._drawHeartPath(cr, cx, cy, size);
-                cr.setLineWidth(strokeWidth);
-                cr.setLineJoin(Cairo.LineJoin.ROUND);
-                cr.stroke();
-
-                cr.restore();
-            }
-            cr.$dispose();
-        }
-    }
-);
 
 // ─── Custom Progress Bar Widget ───
 const PomodoroBar = GObject.registerClass(
@@ -325,9 +233,9 @@ const PomodoroBar = GObject.registerClass(
             if (hexColor) {
                 let c = this._adjustSaturation(hexColor, saturation);
                 let comp = this._hexToComponents(c);
-                // Soft aesthetic glow — 4-layer alpha falloff for premium liquid light
+                // 5-layer liquid halo — progressive alpha falloff for premium fluid light
                 this._fill.set_style(
-                    `border-radius: ${radius}px; background: ${c}; box-shadow: 0 0 ${glow}px ${c}, 0 0 ${glow * 1.5}px rgba(${comp}, 0.7), 0 0 ${glow * 3}px rgba(${comp}, 0.35), 0 0 ${glow * 5}px rgba(${comp}, 0.12);`
+                    `border-radius: ${radius}px; background: ${c}; box-shadow: 0 0 ${glow}px ${c}, 0 0 ${glow * 1.5}px rgba(${comp}, 0.7), 0 0 ${glow * 3}px rgba(${comp}, 0.35), 0 0 ${glow * 5}px rgba(${comp}, 0.12), 0 0 ${glow * 8}px rgba(${comp}, 0.05);`
                 );
             } else {
                 this._fill.set_style(`border-radius: ${radius}px;`);
@@ -453,7 +361,7 @@ const PomodoroBar = GObject.registerClass(
             this.setFillClass('pomodoro-complete-fill');
             this.applyAppearance(null, 99, 1.0, 3); // Let CSS handle color, but maintain radius
 
-            // Modern spring/bounce animation for completion
+            // Modern spring/bounce animation for completion — liquid burst
             this._progress = 1.0;
             this._fill.remove_transition('width');
             this._fill.width = Math.floor((this._innerW || this._barWidth) * 0.8);
@@ -461,6 +369,23 @@ const PomodoroBar = GObject.registerClass(
                 width: this._innerW || this._barWidth,
                 duration: 600,
                 mode: Clutter.AnimationMode.EASE_OUT_ELASTIC
+            });
+
+            // Scale burst on the whole bar container — liquid pop
+            this.ease({
+                scale_x: 1.06,
+                scale_y: 1.06,
+                duration: 200,
+                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                onComplete: () => {
+                    if (this._destroyed) return;
+                    this.ease({
+                        scale_x: 1.0,
+                        scale_y: 1.0,
+                        duration: 400,
+                        mode: Clutter.AnimationMode.EASE_OUT_ELASTIC
+                    });
+                }
             });
 
             this.setTimeText('Done');
@@ -702,9 +627,14 @@ export default class PomodoroTimerExtension extends Extension {
         // Activating the menu item launches the preferences window.
         this._indicator = new PanelMenu.Button(0.0, this.metadata.name, false);
 
-        // Panel heart icon
-        this._icon = new HeartProgressIcon();
-        this._applyHeartColors();
+        // Panel icon
+        const iconPath = this.dir.get_child('icons').get_child('polindora-logo.svg').get_path();
+        this._icon = new St.Icon({
+            gicon: Gio.FileIcon.new(Gio.File.new_for_path(iconPath)),
+            style_class: 'pomodoro-indicator-icon system-status-icon',
+            icon_size: 16,
+            y_align: Clutter.ActorAlign.CENTER,
+        });
         this._indicator.add_child(this._icon);
 
         // Add a menu item to pause/resume the timer
@@ -730,8 +660,20 @@ export default class PomodoroTimerExtension extends Extension {
         });
         this._indicator.menu.addMenuItem(prefsItem);
 
+        // Apply theme to the menu actor
+        this._updateMenuTheme();
+
         // Add to panel
         Main.panel.addToStatusArea(this.uuid, this._indicator);
+    }
+
+    _updateMenuTheme() {
+        if (!this._indicator || !this._indicator.menu || !this._indicator.menu.actor) return;
+        if (this._settings.get_string('theme-name') === 'black-pink') {
+            this._indicator.menu.actor.add_style_class_name('theme-black-pink');
+        } else {
+            this._indicator.menu.actor.remove_style_class_name('theme-black-pink');
+        }
     }
 
     _onBarClicked(actor, event) {
@@ -987,7 +929,8 @@ export default class PomodoroTimerExtension extends Extension {
                 taskStats = JSON.parse(this._settings.get_string('task-stats'));
                 if (!taskStats || typeof taskStats !== 'object') taskStats = {};
             } catch (e) { taskStats = {}; }
-            let cat = this._currentCategory || 'General';
+            let cat = (this._currentCategory || 'General').trim().replace(/\s+/g, ' ');
+            cat = cat.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
             taskStats[cat] = (taskStats[cat] || 0) + actualMins;
             this._settings.set_string('task-stats', JSON.stringify(taskStats));
 
@@ -1204,16 +1147,25 @@ export default class PomodoroTimerExtension extends Extension {
                 this._applyBreakColor();
             }
         }
-        if (key === 'heart-color' || key === 'heart-outline-color') {
+        if (key === 'heart-color' || key === 'heart-outline-color' || key === 'icon-style') {
             this._applyHeartColors();
+        }
+        if (key === 'theme-name') {
+            this._updateMenuTheme();
         }
     }
 
     _applyHeartColors() {
         if (!this._icon || !this._settings) return;
-        const heartColor = this._settings.get_string('heart-color');
-        const outlineColor = this._settings.get_string('heart-outline-color');
-        this._icon.setColors(heartColor, outlineColor);
+        const outlineColor = this._settings.get_string('heart-color');
+        const fillColor = this._settings.get_string('heart-outline-color');
+        const iconStyle = this._settings.get_string('icon-style') || 'heart-outline';
+        if (typeof this._icon.setColors === 'function') {
+            this._icon.setColors(outlineColor, fillColor);
+        }
+        if (typeof this._icon.setIconStyle === 'function') {
+            this._icon.setIconStyle(iconStyle);
+        }
     }
 
     // Safely apply dimension + appearance changes in a single batch.
