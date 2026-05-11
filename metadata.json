@@ -1,5 +1,5 @@
 {
-    "uuid": "pomodoro-timer@pluto",
+    "uuid": "polindora@yosantosh.github.io",
     "name": "Polindora",
     "description": "A strict-focus Pomodoro timer with beautiful glassmorphism progress bars on the top panel. Work bar appears right of the clock, break bar appears left. Designed to force you to stay focused.",
     "shell-version": [
@@ -10,8 +10,8 @@
         "49",
         "50"
     ],
-    "url": "",
+    "url": "https://github.com/yosantosh/Polindora",
     "settings-schema": "org.gnome.shell.extensions.pomodoro-timer",
-    "gettext-domain": "pomodoro-timer@pluto",
+    "gettext-domain": "polindora@yosantosh.github.io",
     "version": 1
 }

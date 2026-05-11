@@ -33,7 +33,7 @@ fi
 
 # Fallback to default if not found (in case script was moved)
 if [ -z "$EXT_UUID" ]; then
-    EXT_UUID="pomodoro-timer@pluto"
+    EXT_UUID="polindora@yosantosh.github.io"
 fi
 
 EXT_DIR="$HOME/.local/share/gnome-shell/extensions/$EXT_UUID"

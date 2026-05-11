@@ -516,43 +516,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         settings.bind('bar-radius', radiusRow, 'value', Gio.SettingsBindFlags.DEFAULT);
         dimGroup.add(radiusRow);
 
-        // ── Icon Customization ──
-        const iconGroup = new Adw.PreferencesGroup({
-            title: _('Icon Customization'),
-            description: _('Customize the top panel app icon'),
-        });
-        appearancePage.add(iconGroup);
 
-        const iconStyleMap = [
-            { id: 'heart-outline', label: _('Outline Heart') },
-            { id: 'heart-solid', label: _('Solid Heart') },
-            { id: 'ring', label: _('Timer Ring') },
-            { id: 'flame', label: _('Flame') },
-        ];
-        const iconStyleRow = new Adw.ComboRow({
-            title: _('Icon Shape'),
-            subtitle: _('Choose the top panel icon style'),
-            model: Gtk.StringList.new(iconStyleMap.map(x => x.label)),
-        });
-        const currentIconStyle = settings.get_string('icon-style') || 'heart-outline';
-        const styleIndex = Math.max(0, iconStyleMap.findIndex(x => x.id === currentIconStyle));
-        iconStyleRow.set_selected(styleIndex);
-        iconStyleRow.connect('notify::selected', row => {
-            const selected = row.get_selected();
-            const item = iconStyleMap[selected];
-            if (item) settings.set_string('icon-style', item.id);
-        });
-        iconGroup.add(iconStyleRow);
-
-        const iconColorButtons = {};
-
-        // Heart Color (base outline)
-        iconColorButtons['heart-color'] = this._addColorRow(iconGroup, settings, 'heart-color',
-            _('Heart Outline Color'), _('Base outline color of the heart (visible when not filled)'));
-
-        // Heart Progress Fill Color
-        iconColorButtons['heart-outline-color'] = this._addColorRow(iconGroup, settings, 'heart-outline-color',
-            _('Heart Progress Color'), _('Color that fills the heart outline as timer progresses'));
 
         // ── Colors ──
         const colorGroup = new Adw.PreferencesGroup({
@@ -624,7 +588,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
             for (const [key, hex] of Object.entries(defaultColors)) {
                 settings.set_string(key, hex);
                 // Update the color button UI immediately
-                let btn = colorButtons[key] || iconColorButtons[key];
+                let btn = colorButtons[key];
                 if (btn) {
                     const rgba = new Gdk.RGBA();
                     if (rgba.parse(hex)) {
@@ -1854,7 +1818,9 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         let totalTasks = tasks.length;
         let doneTasks = tasks.filter(t => t.done).length;
         let activeTasks = totalTasks - doneTasks;
-        let compRate = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+        let deletedIncomplete = settings.get_int('deleted-incomplete-count');
+        let effectiveTotal = totalTasks + deletedIncomplete;
+        let compRate = effectiveTotal > 0 ? Math.round((doneTasks / effectiveTotal) * 100) : 0;
 
         const totalTasksRow = new Adw.ActionRow({
             icon_name: 'polindora-list-symbolic',
@@ -1890,7 +1856,9 @@ export default class PomodoroPreferences extends ExtensionPreferences {
             let tot = t.length;
             let dn = t.filter(x => x.done).length;
             let act = tot - dn;
-            let rt = tot > 0 ? Math.round((dn / tot) * 100) : 0;
+            let delInc = settings.get_int('deleted-incomplete-count');
+            let effTotal = tot + delInc;
+            let rt = effTotal > 0 ? Math.round((dn / effTotal) * 100) : 0;
             totalTasksRow.set_subtitle(`${tot} created`);
             doneTasksRow.set_subtitle(`${dn} finished`);
             activeTasksRow.set_subtitle(`${act} remaining`);
@@ -1946,6 +1914,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
             settings.set_string('task-stats', '{}');
             settings.set_string('analytics-history', '[]');
             settings.set_int('best-streak', 0);
+            settings.set_int('deleted-incomplete-count', 0);
             heroSessionsRow.set_subtitle('0 sessions today');
             heroSessionsLabel.set_label('0');
             heroFocusRow.set_subtitle('0m of deep work');
@@ -1972,6 +1941,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         const sid3 = settings.connect('changed::tasks', () => _refreshTaskStats());
         const sid4 = settings.connect('changed::total-focus-minutes', () => _refreshHeroStats());
         const sid5 = settings.connect('changed::analytics-history', () => _refreshStreakStats());
+        const sid6 = settings.connect('changed::deleted-incomplete-count', () => _refreshTaskStats());
 
         window.connect('close-request', () => {
             settings.disconnect(sid1);
@@ -1979,6 +1949,7 @@ export default class PomodoroPreferences extends ExtensionPreferences {
             settings.disconnect(sid3);
             settings.disconnect(sid4);
             settings.disconnect(sid5);
+            settings.disconnect(sid6);
             return false;
         });
     }
@@ -2011,7 +1982,9 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         let total = tasks.length;
         let done = tasks.filter(t => t.done).length;
         let active = total - done;
-        let rate = total > 0 ? Math.round((done / total) * 100) : 0;
+        let deletedInc = settings.get_int('deleted-incomplete-count');
+        let effTotal = total + deletedInc;
+        let rate = effTotal > 0 ? Math.round((done / effTotal) * 100) : 0;
 
         const summaryTotalRow = new Adw.ActionRow({ title: _('Total Tasks'), icon_name: 'polindora-list-symbolic' });
         const summaryTotalLabel = new Gtk.Label({ label: `${total}`, css_classes: ['title-2'] });
@@ -2036,7 +2009,10 @@ export default class PomodoroPreferences extends ExtensionPreferences {
         const _refreshMiniStats = () => {
             let t = _readTasks();
             let tot = t.length, dn = t.filter(x => x.done).length;
-            let act = tot - dn, rt = tot > 0 ? Math.round((dn / tot) * 100) : 0;
+            let act = tot - dn;
+            let delInc = settings.get_int('deleted-incomplete-count');
+            let effTot = tot + delInc;
+            let rt = effTot > 0 ? Math.round((dn / effTot) * 100) : 0;
             summaryTotalLabel.set_label(`${tot}`);
             summaryDoneLabel.set_label(`${dn}`);
             summaryActiveLabel.set_label(`${act}`);
@@ -2121,19 +2097,40 @@ export default class PomodoroPreferences extends ExtensionPreferences {
                         _refreshMiniStats();
                     });
                     row.add_suffix(doneBtn);
-                    // Delete button
+                    // Delete button (active/incomplete task)
                     let delBtn = new Gtk.Button({
                         icon_name: 'polindora-delete-symbolic',
                         valign: Gtk.Align.CENTER,
                         css_classes: ['destructive-action'],
+                        tooltip_text: _('⚠ Deleting an incomplete task will lower your completion rate'),
                     });
                     delBtn.connect('clicked', () => {
-                        let cur = _readTasks();
-                        let idx = cur.findIndex(x => x.id === t.id);
-                        if (idx >= 0) cur.splice(idx, 1);
-                        settings.set_string('tasks', JSON.stringify(cur));
-                        renderTasks();
-                        _refreshMiniStats();
+                        // Show confirmation dialog warning about completion rate impact
+                        const dialog = new Adw.AlertDialog({
+                            heading: _('Delete Task?'),
+                            body: _('Deleting an incomplete task will permanently lower your task completion rate. Consider marking it as done instead.'),
+                        });
+                        dialog.add_response('cancel', _('Cancel'));
+                        dialog.add_response('delete', _('Delete Anyway'));
+                        dialog.set_response_appearance('delete', Adw.ResponseAppearance.DESTRUCTIVE);
+                        dialog.set_default_response('cancel');
+                        dialog.set_close_response('cancel');
+                        dialog.connect('response', (dlg, response) => {
+                            if (response === 'delete') {
+                                let cur = _readTasks();
+                                let idx = cur.findIndex(x => x.id === t.id);
+                                if (idx >= 0) {
+                                    cur.splice(idx, 1);
+                                    // Increment deleted incomplete counter
+                                    let delCount = settings.get_int('deleted-incomplete-count');
+                                    settings.set_int('deleted-incomplete-count', delCount + 1);
+                                }
+                                settings.set_string('tasks', JSON.stringify(cur));
+                                renderTasks();
+                                _refreshMiniStats();
+                            }
+                        });
+                        dialog.present(window);
                     });
                     row.add_suffix(delBtn);
                     activeGroup.add(row);

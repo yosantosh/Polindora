@@ -490,22 +490,47 @@ export default class PomodoroTimerExtension extends Extension {
             this._clickTimeoutId = 0;
         }
 
-        // Remove progress bars from center box
+        // Disconnect bar click signals before destroying
         if (this._workBar) {
+            if (this._workBarClickId) {
+                this._workBar.disconnect(this._workBarClickId);
+                this._workBarClickId = 0;
+            }
             this._workBar.destroy();
             this._workBar = null;
         }
         if (this._breakBar) {
+            if (this._breakBarClickId) {
+                this._breakBar.disconnect(this._breakBarClickId);
+                this._breakBarClickId = 0;
+            }
             this._breakBar.destroy();
             this._breakBar = null;
         }
 
-        // Remove indicator
+        // Disconnect menu signal and destroy indicator
         if (this._indicator) {
+            if (this._menuOpenStateId) {
+                this._indicator.menu.disconnect(this._menuOpenStateId);
+                this._menuOpenStateId = 0;
+            }
             this._indicator.destroy();
             this._indicator = null;
         }
 
+        // Destroy owned child objects and release references
+        if (this._icon) {
+            this._icon.destroy();
+            this._icon = null;
+        }
+        if (this._pauseItem) {
+            this._pauseItem.destroy();
+            this._pauseItem = null;
+        }
+        if (this._quoteItem) {
+            this._quoteItem.destroy();
+            this._quoteItem = null;
+        }
         this._settings = null;
     }
 
@@ -599,12 +624,12 @@ export default class PomodoroTimerExtension extends Extension {
         // Work bar — goes RIGHT of the clock
         this._workBar = new PomodoroBar('work');
         this._workBar.setDimensions(barWidth, barHeight);
-        this._workBar.connect('button-press-event', (actor, event) => this._onBarClicked(actor, event));
+        this._workBarClickId = this._workBar.connect('button-press-event', (actor, event) => this._onBarClicked(actor, event));
 
         // Break bar — goes LEFT of the clock
         this._breakBar = new PomodoroBar('break');
         this._breakBar.setDimensions(barWidth, barHeight);
-        this._breakBar.connect('button-press-event', (actor, event) => this._onBarClicked(actor, event));
+        this._breakBarClickId = this._breakBar.connect('button-press-event', (actor, event) => this._onBarClicked(actor, event));
 
         // Find the dateMenu (clock) in the center box
         const dateMenu = Main.panel.statusArea.dateMenu;
@@ -671,7 +696,7 @@ export default class PomodoroTimerExtension extends Extension {
         this._indicator.menu.addMenuItem(prefsItem);
 
         // Refresh quote when menu is opened
-        this._indicator.menu.connect('open-state-changed', (menu, open) => {
+        this._menuOpenStateId = this._indicator.menu.connect('open-state-changed', (menu, open) => {
             if (open) {
                 this._quoteItem.label.text = getTimedQuote(8);
             }
@@ -1002,6 +1027,10 @@ export default class PomodoroTimerExtension extends Extension {
             if (this._settings && this._settings.get_boolean('auto-start-breaks')) {
                 const interval = this._settings.get_int('long-break-interval');
                 const isLongBreak = (this._pomodoroCount % interval) === 0;
+                if (this._transitionTimeoutId > 0) {
+                    GLib.source_remove(this._transitionTimeoutId);
+                    this._transitionTimeoutId = 0;
+                }
                 this._transitionTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 2200, () => {
                     this._transitionTimeoutId = 0;
                     if (this._disabled) return GLib.SOURCE_REMOVE;
@@ -1009,6 +1038,10 @@ export default class PomodoroTimerExtension extends Extension {
                     return GLib.SOURCE_REMOVE;
                 });
             } else {
+                if (this._transitionTimeoutId > 0) {
+                    GLib.source_remove(this._transitionTimeoutId);
+                    this._transitionTimeoutId = 0;
+                }
                 this._transitionTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 2200, () => {
                     this._transitionTimeoutId = 0;
                     if (this._disabled) return GLib.SOURCE_REMOVE;
@@ -1032,6 +1065,10 @@ export default class PomodoroTimerExtension extends Extension {
 
             // Auto-start work
             if (this._settings && this._settings.get_boolean('auto-start-work')) {
+                if (this._transitionTimeoutId > 0) {
+                    GLib.source_remove(this._transitionTimeoutId);
+                    this._transitionTimeoutId = 0;
+                }
                 this._transitionTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 2200, () => {
                     this._transitionTimeoutId = 0;
                     if (this._disabled) return GLib.SOURCE_REMOVE;
@@ -1039,6 +1076,10 @@ export default class PomodoroTimerExtension extends Extension {
                     return GLib.SOURCE_REMOVE;
                 });
             } else {
+                if (this._transitionTimeoutId > 0) {
+                    GLib.source_remove(this._transitionTimeoutId);
+                    this._transitionTimeoutId = 0;
+                }
                 this._transitionTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 2200, () => {
                     this._transitionTimeoutId = 0;
                     if (this._disabled) return GLib.SOURCE_REMOVE;

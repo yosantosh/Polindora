@@ -162,6 +162,12 @@
       <summary>To-Do Tasks</summary>
       <description>JSON array of tasks: [{text, category, done, id, completedAt, pomodorosSpent}]</description>
     </key>
+
+    <key name="deleted-incomplete-count" type="i">
+      <default>0</default>
+      <summary>Deleted incomplete tasks count</summary>
+      <description>Number of incomplete (active) tasks the user has deleted. Used to calculate an accurate completion rate.</description>
+    </key>
     
     <key name="task-stats" type="s">
       <default>'{}'</default>
